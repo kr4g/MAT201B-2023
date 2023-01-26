@@ -68,19 +68,29 @@ struct AnApp : App {
         // rgb.vertex(position[0] / 255.0, position[1] / 255.0, position[2] / 255.0);
         // rgb.color(pixel.r / 255.0, pixel.g / 255.0, pixel.b / 255.0);
 
-        // note: I had to look at the repo to figure out this fix
         rgb.vertex(color.r - 0.5, color.g - 0.5, color.b - 0.5);
         rgb.color(color);
 
-        // TODO: HSV color cylinder
-        // hsv.vertex( ... );
-        // hsv.color( ... );
-
+        // HSV color cylinder
+        // from https://github.com/kybr/MAT201B-2023/blob/main/assignment1/main.cpp
+        {
+          HSV c(color);
+          hsv.vertex(c.s * sin(M_2PI * c.h), c.v - 0.5,
+                          c.s * cos(M_2PI * c.h));
+          hsv.color(color);
+        }
         // extra mesh
-        // add a random double between -1 and 1 to each position
-        extra.vertex(position[0] + rnd::uniformS(), position[1] + rnd::uniformS(), position[2] + rnd::uniformS());  
-        // add a random double value to each color
-        extra.color(color.r + rnd::uniformS(), color.g + rnd::uniformS(), color.b + rnd::uniformS());
+        // 
+        // extra.vertex(position);
+        // float low = rnd::uniform(-1.0, 0.0);
+        // float high = rnd::uniform(0.0, 1.0);
+        extra.vertex(position[0],
+                     position[1],
+                    //  position[2] + color.r - 0.5//rnd::uniform(low, high)
+                     position[2] - color.b - (color.r + color.g) / 2.0f
+                    );
+        // extra.vertex(position);
+        extra.color(color);
       }
     }
 
@@ -88,6 +98,7 @@ struct AnApp : App {
     mean /= original.vertices().size();
     for (auto& v : original.vertices()) v -= mean;
     for (auto& v : current.vertices()) v -= mean;
+    for (auto& v : target.vertices()) v -= mean;
 
     // configure the meshs to render as points
     original.primitive(Mesh::POINTS);
@@ -100,7 +111,7 @@ struct AnApp : App {
     extra.primitive(Mesh::POINTS);
 
     // set the viewer position 3 units back
-    nav().pos(0, 0, 3);
+    nav().pos(0, 0, 5);
   }
 
   double time = 1; // note: Sabina helped me with this
@@ -116,28 +127,43 @@ struct AnApp : App {
     // animate changes to the CURRENT mesh using linear interpolation
     if (time < 1) {
       int len = original.vertices().size();
-      for (int i = 0; i < len; ++i) { current.vertices()[i].lerp(target.vertices()[i], time); }
+      double minStep = 0.05;//(1.0 / (double)len > 0.1) ? 0.3 : 0.1;
+      // float offset = (pressedKey==4) ? rnd::uniform(-0.1, 0.1) : 0.0;
+      for (int i = 0; i < len; ++i) {
+        current.vertices()[i].lerp(target.vertices()[i], minStep);
+        // if (pressedKey==4) {  // extra
+          // FIX:  move camera slowly
+          // double d = pow(1.16, i);
+          // nav().pos(0, 0, 5 - 2*time/d);
+        // }
+      }
     } else {
       current.vertices() = target.vertices();
     }
   }
 
+  int pressedKey = 0;
   bool onKeyDown(Keyboard const& k) override {
     time = 0;
     switch (k.key()) {
       case '1': {
+        pressedKey = 1;
+        nav().pos(0, 0, 5);
         // note: trigger transition back to original vertex positions
         target.vertices() = original.vertices();
       } break;
       case '2': {
+        pressedKey = 2;
         // note: trigger transition toward an RGB cube
         target.vertices() = rgb.vertices();
       } break;
       case '3': {
+        pressedKey = 3;
         // note: trigger transition toward an HSV cylinder
         target.vertices() = hsv.vertices();
       } break;
       case '4': {
+        pressedKey = 4;
         // note: trigger transition to your custom arrangement
         target.vertices() = extra.vertices();
       } break;
