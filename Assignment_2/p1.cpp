@@ -47,8 +47,9 @@ struct AnApp : App {
     for (int i = 0; i < velocity.size(); ++i) {
       for (int j = 0; j < velocity.size(); ++j) {
         if (i != j) {
+          Vec3f direction = (position.vertices()[i] - position.vertices()[j]).normalize();  // from jinjinhe
           r = abs(position.vertices()[i] - position.vertices()[j]);
-          gForce[i] = (gravScale.get() * G) * (1.0f / (r*r));
+          gForce[i] = (gravScale.get() * G) * (1.0f / (r*r)) * direction;
         }
       }
     }
