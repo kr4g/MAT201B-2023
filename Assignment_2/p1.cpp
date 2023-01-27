@@ -20,7 +20,7 @@ Vec3f r() { return Vec3f(rnd::uniformS(), rnd::uniformS(), rnd::uniformS()); }
 RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
 
 struct AnApp : App {
-  Parameter maxForce{"max-force", "", 0.01, 0.0, 1.0};
+  // Parameter maxForce{"max-force", "", 0.01, 0.0, 1.0};
   Parameter drag{"drag", "", 0.01, 0.0, 0.1};
   Parameter gravScale{"grav-scale", "", 1.0, 0.1, 10.0};
   Parameter timeStep{"timeStep", "", 1, 0, 10};
@@ -81,7 +81,7 @@ struct AnApp : App {
   void onInit() override {
     auto GUIdomain = GUIDomain::enableGUI(defaultWindowDomain());
     auto& gui = GUIdomain->newGUI();
-    gui.add(maxForce);
+    // gui.add(maxForce);
     gui.add(drag);
     gui.add(gravScale);
     gui.add(timeStep);
