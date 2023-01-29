@@ -40,7 +40,7 @@ namespace Common {
 };
 
 struct AnApp : App {
-  Parameter sunMassScale{"sun-mass-scale", "", 1.018f, 1.0f, 1.33f};
+  Parameter sunMassScale{"sun-mass-scale", "", 1.0018f, 1.0f, 1.1667f};
   Parameter maxForce{"max-force", "", 1.0f, 0.0f, 0.1f};
   Parameter drag{"drag", "", 0.02f, 0.0f, 0.1f};
   Parameter gravScale{"grav-scale", "", 22.7400f, -1000.0f, 1000.0f};  // TODO: make cubic
@@ -190,7 +190,9 @@ void generate_particles(int num_particles, std::string particle_type, double mas
 
   void onAnimate(double dt) override {
     time += dt * timeStep.get();
-    mass[0] *= sunMassScale.get();  // scale the mass of the sun
+    float timeRate = dt * timeStep.get();
+    mass[0] *= sunMassScale.get();// * (age[0] / timeRate);  // scale the mass of the sun proportional to it's age
+    // cout << position.colors() << endl;//.lerp(Vec3f(1.f, 0.f, 0.f, 1.f), 0.01f);  // set the color of the sun
     // for each particle, calculate the distance and force of gravity 
     // between it and every other particle except itself.
     std::vector<int> deadParticles;
