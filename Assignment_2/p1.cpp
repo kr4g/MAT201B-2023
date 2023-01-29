@@ -11,19 +11,26 @@
 #include "al/io/al_File.hpp"
 #include "al/math/al_Random.hpp"
 
-const double G = 6.67430E-11; // gravitational constant
-
 using namespace al;
 using namespace std;
 
 Vec3f r() { return Vec3f(rnd::uniformS(), rnd::uniformS(), rnd::uniformS()); }
 RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
 
+// from class code review 1/24/2023
+namespace Common {
+    constexpr float G = 6.67430E-11; // gravitational constant
+    constexpr float F_G(float m1, float m2, float r, float g) {
+        return g * G * m1 * m2 / (r * r * (float)1e-4);  // gForce
+    };
+};
+
 struct AnApp : App {
-  // Parameter maxForce{"max-force", "", 0.01, 0.0, 1.0};
-  Parameter drag{"drag", "", 0.01, 0.0, 0.1};
-  Parameter gravScale{"grav-scale", "", 1.0, 0.1, 10.0};
-  Parameter timeStep{"timeStep", "", 1, 0, 10};
+  Parameter maxForce{"maxForce", "", 1.0f, 0.0f, 0.1f};
+  Parameter drag{"drag", "", 0.01f, 0.0f, 0.1f};
+  Parameter forceDiffuseScalar{"force-diffuse-scalar", "", 0.1f, 0.0f, 0.9f};
+  Parameter gravScale{"grav-scale", "", 1.0f, -100.0f, 100.0f};  // TODO: make cubic
+  Parameter timeStep{"timeStep", "", 1.0f, 0.0f, 100.0f};
   Mesh position{Mesh::POINTS};
   std::vector<Vec3f> velocity;
   // std::vector<Vec3f> mass;
@@ -42,14 +49,17 @@ struct AnApp : App {
 
   void onAnimate(double dt) override {
     // calculate the force of gravity...
-    double r = 0.0;  // distance between two particles
-    // for each particle, calculate the distance to every other particle
+    // float dist = 0.0;  // distance between two particles
+    // for each particle, calculate the distance and force of gravity 
+    // between it and every other particle except itself.
     for (int i = 0; i < velocity.size(); ++i) {
       for (int j = 0; j < velocity.size(); ++j) {
         if (i != j) {
-          Vec3f direction = (position.vertices()[i] - position.vertices()[j]).normalize();  // from jinjinhe
-          r = abs(position.vertices()[i] - position.vertices()[j]);
-          gForce[i] = (gravScale.get() * G) * (1.0f / (r*r)) * direction;
+          float maxF = maxForce.get();
+          Vec3f r = position.vertices()[j] - position.vertices()[i];
+          Vec3f F = min(Common::F_G(1, 1, r.mag(), gravScale.get()), maxF) * r.normalize();
+          gForce[i] += (float)dt * (F / 1.f) * 1.f;
+          gForce[j] -= (float)dt * (F / 1.f) * 1.f;
         }
       }
     }
@@ -57,17 +67,27 @@ struct AnApp : App {
     // semi-implicit Euler integration
     // apply the force of gravity to the velocity
     for (int i = 0; i < velocity.size(); ++i) {
-      velocity[i] += -velocity[i] * gForce[i] * drag.get() * timeStep.get() * dt;
+      velocity[i] += -velocity[i] * drag.get() + gForce[i] * dt * timeStep.get();
+      gForce[i] = gForce[i] * forceDiffuseScalar.get();
     }
     for (int i = 0; i < position.vertices().size(); ++i) {
-      position.vertices()[i] += velocity[i] * timeStep.get() * dt;
+      position.vertices()[i] += velocity[i] * dt * timeStep.get();
     }
+    nav().faceToward(Vec3f(0.f, 0.f, 0.f));
   }
 
   bool onKeyDown(Keyboard const& k) override {
-    for (int i = 0; i < position.vertices().size(); ++i) {
-      position.vertices()[i] = r();
-      velocity[i] = r() * 0.01;
+    switch (k.key()) {
+      case ' ':  // spacebar
+        // randomize positions and velocities
+        for (int i = 0; i < position.vertices().size(); ++i) {
+          position.vertices()[i] = r();
+          velocity[i] = r() * 0.01;
+        }
+        break;
+      
+      default:
+        break;
     }
     return true;
   }
@@ -82,8 +102,9 @@ struct AnApp : App {
   void onInit() override {
     auto GUIdomain = GUIDomain::enableGUI(defaultWindowDomain());
     auto& gui = GUIdomain->newGUI();
-    // gui.add(maxForce);
+    gui.add(maxForce);
     gui.add(drag);
+    gui.add(forceDiffuseScalar);
     gui.add(gravScale);
     gui.add(timeStep);
   }
