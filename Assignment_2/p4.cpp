@@ -239,6 +239,7 @@ void generate_particles(int num_particles, std::string particle_type, double mas
       dragScale[i] *= dragRate;  // drag increases with age
     }
     
+    // put this in a "Valkyrie" function
     for (int i = 0; i < deadParticles.size(); ++i) {
       // remove dead particle
       removeParticle(deadParticles[i]);
