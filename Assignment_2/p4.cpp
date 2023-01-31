@@ -90,8 +90,8 @@ void generate_particles(int num_particles, std::string particle_type, double mas
         }
         position.vertex(newVert);
         position.color(color + (c() * randScale * 0.5));
-        velocity.push_back(vel + (rnd::uniformS() * randScale * 0.1));
-        mass.push_back(massVal + (rnd::uniform() * randScale * 0.01));
+        velocity.push_back(vel + (rnd::uniformS() * randScale * 0.01f));
+        mass.push_back(massVal + (rnd::uniform() * randScale * 0.01f));
         radius.push_back(rad + (rnd::uniform() * randScale * 0.1));
         gForce.push_back(Vec3f(0.0f, 0.0f, 0.0f));
         dragScale.push_back(1.0f);
@@ -134,7 +134,7 @@ void generate_particles(int num_particles, std::string particle_type, double mas
                        1e-9,
                        0.3f,                        // radius
                        position.vertices()[0],
-                       Vec3f(1e9, -1e9, 0),
+                       Vec3f(-1e-9, 1e-6, 0),
                        Color(0.0, 0.3, 0.7, 1.0),
                        0.0887);
 
@@ -145,7 +145,7 @@ void generate_particles(int num_particles, std::string particle_type, double mas
                        1e-6,
                        0.09f,                       // radius
                        position.vertices()[0],
-                       Vec3f(1e9, -1e9, 0),
+                       Vec3f(1e-6, -1e-9, 0),
                        Color(0.0, 0.0, 0.8, 0.9),
                        0.33);
 

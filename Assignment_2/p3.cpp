@@ -34,7 +34,7 @@ RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
 namespace Common {
     constexpr float G = 6.67430E-11; // gravitational constant
     constexpr float F_G(float m1, float m2, float r, float g) {
-        return ((g) ? g : 1.0) * G * m1 * m2 / (r * r * (float)1e-4);  // gForce
+        return ((g) ? g : 1.0) * G * m1 * m2 / (r * r * (float)1e-4);  // g-force
     };
 };
 
@@ -104,7 +104,7 @@ struct AnApp : App {
                        1e-9,
                        0.3f,                        // radius
                        position.vertices()[0],
-                       Vec3f(-1e-6, 1e-6, 0),
+                       Vec3f(-1e-9, 1e-9, 0),
                        Color(0.0, 0.3, 0.7, 1.0),
                        0.087);
 
@@ -115,8 +115,9 @@ struct AnApp : App {
                        1e-6,
                        0.09f,                       // radius
                        position.vertices()[0],
-                       Vec3f(-1e-6, 1e-6, 0),
-                       Color(0.0, 0.0, 0.8, 0.67),
+                       Vec3f(-1e-7, 1e-7, 0),
+                      //  color grey
+                       Color(0.5, 0.5, 0.5, 1.0),
                        0.67);
 
     // Asteroids
