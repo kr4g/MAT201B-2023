@@ -42,10 +42,10 @@ struct AnApp : App {
   Parameter sunMassScale{"sun-mass-scale", "", 1.0f, 1.0f, 2.0f};
   Parameter maxForce{"max-force", "", 1.0f, 0.0f, 0.1f};
   Parameter drag{"drag", "", 0.001f, 0.0f, 0.05f};
-  Parameter gravScale{"grav-scale", "", 1.0f, -100.0f, 100.0f};  // TODO: make cubic
+  Parameter gravScale{"grav-scale", "", 1.0f, 0.001f, 1000.0f};  // TODO: make cubic
   Parameter forceDiffuseScalar{"force-diffuse-scalar", "", 0.1f, 0.0f, 0.9f};
   ParameterBool isAsymmetrical{"asymmetric-force", "", 1.f, 0, 1.0f};
-  Parameter timeStep{"time-step", "", 1.0f, 0.0001f, 2.0f};
+  Parameter timeStep{"time-step", "", 1.0f, 0.0001f, 100.0f};
   Mesh position{Mesh::POINTS};
   std::vector<Vec3f> velocity;
   std::vector<double> mass;

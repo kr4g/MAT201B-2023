@@ -22,7 +22,8 @@ using namespace std;
 
 const int MAX_PARTICLES = 100;
 int numSuns = 1;
-float pPlanets = 0.9, pMoons = 1.67, pAsteroids = 3.54;
+float pPlanets = 3.1667, pMoons = 6.333, pAsteroids = 27.67;
+// float pPlanets = 0.3, pMoons = 0.7, pAsteroids = 1.3;
 
 // // const std::string imageFilename = "mpv-shot0005.jpg";
 // const std::string imageFilename = "multi-color-texture-threads-5k-i4.jpg";
@@ -43,7 +44,7 @@ struct AnApp : App {
   Parameter sunMassScale{"sun-mass-scale", "", 1.0018f, 1.0f, 1.1667f};
   Parameter maxForce{"max-force", "", 1.0f, 0.0f, 0.1f};
   Parameter drag{"drag", "", 0.02f, 0.0f, 0.1f};
-  Parameter gravScale{"grav-scale", "", 22.7400f, -1000.0f, 1000.0f};  // TODO: make cubic
+  Parameter gravScale{"grav-scale", "", 1.0f, 0.001f, 1000.0f};  // TODO: make cubic
   Parameter forceDiffuseScalar{"force-diffuse-scalar", "", 0.1f, 0.0f, 0.9f};
   ParameterBool isAsymmetrical{"asymmetric-force", "", 1.f, 0, 1.0f};
   Parameter timeStep{"time-step", "", 10.0f, 0.0001f, 1000.0f};
@@ -133,7 +134,7 @@ void generate_particles(int num_particles, std::string particle_type, double mas
                        1e-9,
                        0.3f,                        // radius
                        position.vertices()[0],
-                       Vec3f(1e-6, -1e-6, 0),
+                       Vec3f(1e9, -1e9, 0),
                        Color(0.0, 0.3, 0.7, 1.0),
                        0.0887);
 
@@ -144,7 +145,7 @@ void generate_particles(int num_particles, std::string particle_type, double mas
                        1e-6,
                        0.09f,                       // radius
                        position.vertices()[0],
-                       Vec3f(1e-6, -1e-6, 0),
+                       Vec3f(1e9, -1e9, 0),
                        Color(0.0, 0.0, 0.8, 0.9),
                        0.33);
 
