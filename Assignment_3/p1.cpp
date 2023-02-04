@@ -12,7 +12,7 @@
 
 const int MAX_BOIDS = 1000;
 const int MAX_PREDATORS = MAX_BOIDS * 0.5;
-const int CUBE_SIZE = 1;
+const int CUBE_SIZE = 2;
 
 using namespace al;
 
