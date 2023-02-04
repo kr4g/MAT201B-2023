@@ -137,28 +137,28 @@ struct MyApp : App {
     b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), 0.06);
   }
   
-  void detectNeighbors(Boid &boid) {
-    for (auto& b : boids) {
-      if (&b == &boid) { continue; }
-      auto ds = b.bNav.pos() - boid.bNav.pos();
-      auto dist = ds.mag();
-      // Collision avoidance
-      double pushRadius = 0.05;
-      double pushStrength = 1;
-      double push = exp(-al::pow2(dist / pushRadius)) * pushStrength;
-      auto pushVector = ds.normalized() * push;
-      boid.bNav.pos() += pushVector;
-      b.bNav.pos() -= pushVector;
-      // Velocity matching
-      double matchRadius = 0.125;
-      double nearness = exp(-al::pow2(dist / matchRadius));
-      Vec2d veli = boid.bNav.vel();
-      Vec2d velj = b.bNav.vel();
-      // Take a weighted average of velocities according to nearness
-      boid.bNav.moveF(veli * (1 - 0.5 * nearness) + velj * (0.5 * nearness));
-      boid.bNav.moveF(velj * (1 - 0.5 * nearness) + veli * (0.5 * nearness));
-    }
-  }
+  // void detectNeighbors(Boid &boid) {
+  //   for (auto& b : boids) {
+  //     if (&b == &boid) { continue; }
+  //     auto ds = b.bNav.pos() - boid.bNav.pos();
+  //     auto dist = ds.mag();
+  //     // Collision avoidance
+  //     double pushRadius = 0.05;
+  //     double pushStrength = 1;
+  //     double push = exp(-al::pow2(dist / pushRadius)) * pushStrength;
+  //     auto pushVector = ds.normalized() * push;
+  //     boid.bNav.pos() += pushVector;
+  //     b.bNav.pos() -= pushVector;
+  //     // Velocity matching
+  //     double matchRadius = 0.125;
+  //     double nearness = exp(-al::pow2(dist / matchRadius));
+  //     Vec2d veli = boid.bNav.vel();
+  //     Vec2d velj = b.bNav.vel();
+  //     // Take a weighted average of velocities according to nearness
+  //     boid.bNav.moveF(veli * (1 - 0.5 * nearness) + velj * (0.5 * nearness));
+  //     boid.bNav.moveF(velj * (1 - 0.5 * nearness) + veli * (0.5 * nearness));
+  //   }
+  // }
 
   void randomizeFood() {
     for (auto& f : food) {
@@ -202,7 +202,7 @@ struct MyApp : App {
     // also accepts an amount t that controls the rate of steering.
     for (auto& b : boids) {
       // detect other boids
-      detectNeighbors(b);
+      // detectNeighbors(b);
       // stay in the tank
       handleBounce(b, 0.67f);
       // find nearest food
