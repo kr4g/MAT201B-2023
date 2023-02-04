@@ -34,7 +34,7 @@ class Boid {
   float age{0.0f};
 
   void setAttention(Vec3d a, double amt) { 
-    attention = a;
+    attention.set(a);
     bNav.smooth(0.1);
     bNav.faceToward(attention, Vec3d(0, 1, 0), amt);
   }
@@ -61,7 +61,7 @@ struct MyApp : App {
   Parameter pPredators{"Predators", "", 0.0f, 0.0f, 1.0f};
   // Nav agent;
   // Nav target;
-  std::vector<Boid> boids{50};
+  std::vector<Boid> boids{MAX_BOIDS};
   double time{0};
   double timeStamp{0};
   double angle{0};
@@ -70,7 +70,7 @@ struct MyApp : App {
   Mesh preyMesh;
   Mesh foodMesh{Mesh::POINTS};
 
-  std::vector<Vec3f> food{10};
+  std::vector<Vec3f> food{MAX_BOIDS * 0.5};
   // Nav point;
 
   void onCreate() override {
@@ -135,10 +135,15 @@ struct MyApp : App {
       float dist = (f - b.bNav.pos()).mag();
       if (dist < CUBE_SIZE && dist < minDist) {
         minDist = dist;
+        // if the food is close and the boid is not hungry...
+        if (dist < 0.05 && b.attention == f && b.hunger < 0.1) {
+          // ...find another food
+          continue;
+        }
         nearestFood = f;
       }
     }
-    b.setAttention(nearestFood, 0.06);
+    b.setAttention(nearestFood, 0.01);
   }
   
   // void detectNeighbors(Boid &boid) {
@@ -164,14 +169,18 @@ struct MyApp : App {
   //   }
   // }
 
-  void randomizeFood() {
+  void randomizeFoodList() {
     for (auto& f : food) {
       f.set(r(), r(), r());
     }
   }
 
+  void randomizeFoodParticle(Vec3f& f) {
+    f.set(r(), r(), r());
+  }
+
   void setUp() {
-    randomizeFood();
+    randomizeFoodList();
     for (auto& b : boids) {
       b.type = rnd::prob(pPredators.get());
       //  std::cout << b.type << std::endl;
@@ -181,20 +190,20 @@ struct MyApp : App {
     }
   }
   
-  void randomize(Nav& boid) {
+  void randomize(Nav& boidNav) {
     // std::cout << "randomize" << std::endl;
-    boid.pos(r(), r(), r());
-    boid.quat().set(r(), r(), r(), r()).normalize();
+    boidNav.pos(r(), r(), r());
+    boidNav.quat().set(r(), r(), r(), r()).normalize();
   }
 
   void onAnimate(double dt) override {
     dt *= timeStep.get();
     time += dt;
     timeStamp += dt;
-    if (timeStamp > 0.5f) {
+    if (timeStamp > 1.0f) {
       timeStamp = 0.0f;
-      std::cout << "time: " << time << std::endl;
-      randomizeFood();
+      // std::cout << "time: " << time << std::endl;
+      randomizeFoodList();
     }
     // angle += 0.1;
     // for (auto& f : food) {
@@ -208,19 +217,27 @@ struct MyApp : App {
       // detect other boids
       // detectNeighbors(b);
       // stay in the tank
-      handleBounce(b, 0.67f);
-      // find nearest food
+      handleBounce(b, 0.96f);
+
+      // find nearest food and set attention to it
       findNearestFood(b, food);
+
       // eat food
-      if (al::dist(b.bNav.pos(), b.attention) < 0.1) {
+      if (al::dist(b.bNav.pos(), b.attention) < 0.05) {
         b.hunger -= 0.01f;
-        // std::cout << "EAT" << " : " << time << std::endl;
-        // randomize(point);
-        b.attention = (b.hunger > 0.167f) ? b.attention + (r() * (1.f - b.hunger)) : Vec3d(r(), r(), r());
-        b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), b.hunger);
+        if (b.hunger < 0.0f) {
+          b.hunger = 0.1f;
+          // randomizeFoodParticle(b.attention);
+          // set attention to next closest food
+          findNearestFood(b, food);
+        }
+        // b.setAttention((b.hunger > 0.167f) ?
+        //                 b.attention + (r() * (1.f - b.hunger)) :
+        //                 Vec3d(r(), r(), r()),
+        //                 0.67);
       } else {
-        b.hunger += 0.01f;
-        b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), 0.03);
+        b.hunger = (b.hunger < 1.0f) ? b.hunger + 0.001f : 1.0f;
+        // b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), 0.03);
       }
       // b.bNav.moveF(0.2);
       // b.bNav.step(dt);
