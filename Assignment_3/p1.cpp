@@ -10,8 +10,9 @@
 #include "al/graphics/al_Shapes.hpp"
 #include "al/math/al_Functions.hpp"
 
-const int MAX_BOIDS = 100;
+const int MAX_BOIDS = 1000;
 const int MAX_PREDATORS = MAX_BOIDS * 0.5;
+const int CUBE_SIZE = 1;
 
 using namespace al;
 
@@ -20,7 +21,7 @@ class Boid {
  public:
   Nav bNav;  // Navigation object
 
-  Vec3f attention;  // Where the boid is moving towards
+  Vec3d attention;  // Where the boid is moving towards
 
   // Type of boid
   int type;  // 0 = prey, 1 = predator
@@ -31,6 +32,12 @@ class Boid {
   float fear{0.0f};
 
   float age{0.0f};
+
+  void setAttention(Vec3d a, double amt) { 
+    attention = a;
+    bNav.smooth(0.1);
+    bNav.faceToward(attention, Vec3d(0, 1, 0), amt);
+  }
 
   // Update position based on velocity and delta time
   void update(double v, double dt) {
@@ -46,12 +53,12 @@ class Boid {
   }
 };
 
-double r() { return rnd::uniformS(); }
+double r() { return rnd::uniformS() * CUBE_SIZE; }
 
 struct MyApp : App {
   
   Parameter timeStep{"Time Step", "", 0.1667, "", 0.0, 1.0};
-  Parameter pPredators{"Predators", "", 0.1f, 0.0f, 1.0f};
+  Parameter pPredators{"Predators", "", 0.0f, 0.0f, 1.0f};
   // Nav agent;
   // Nav target;
   std::vector<Boid> boids{50};
@@ -107,15 +114,15 @@ struct MyApp : App {
   }
   
   void handleBounce(Boid &b, float turnRate = 0.67f) {
-      if (b.bNav.pos().x > 1.0f || b.bNav.pos().x < -1.0f) {
+      if (b.bNav.pos().x > CUBE_SIZE || b.bNav.pos().x < -CUBE_SIZE) {
           b.bNav.faceToward(Vec3d(-b.bNav.pos().x, b.bNav.pos().y, b.bNav.pos().z),
                             Vec3d(0, 1, 0), turnRate);
       }
-      if (b.bNav.pos().y > 1.0f || b.bNav.pos().y < -1.0f) {
+      if (b.bNav.pos().y > CUBE_SIZE || b.bNav.pos().y < -CUBE_SIZE) {
           b.bNav.faceToward(Vec3d(b.bNav.pos().x, -b.bNav.pos().y, b.bNav.pos().z),
                             Vec3d(0, 1, 0), turnRate);
       }
-      if (b.bNav.pos().z > 1.0f || b.bNav.pos().z < -1.0f) {
+      if (b.bNav.pos().z > CUBE_SIZE || b.bNav.pos().z < -CUBE_SIZE) {
           b.bNav.faceToward(Vec3d(b.bNav.pos().x, b.bNav.pos().y, -b.bNav.pos().z),
                             Vec3d(0, 1, 0), turnRate);
       }
@@ -126,37 +133,34 @@ struct MyApp : App {
     Vec3f nearestFood;
     for (auto &f : food) {
       float dist = (f - b.bNav.pos()).mag();
-      if (dist > 1) { continue; }
-      if (dist < minDist) {
+      if (dist < CUBE_SIZE && dist < minDist) {
         minDist = dist;
         nearestFood = f;
       }
     }
-    b.attention = nearestFood;
-    b.bNav.smooth(0.1);
-    b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), 0.06);
+    b.setAttention(nearestFood, 0.06);
   }
   
   // void detectNeighbors(Boid &boid) {
-  //   for (auto& b : boids) {
-  //     if (&b == &boid) { continue; }
-  //     auto ds = b.bNav.pos() - boid.bNav.pos();
+  //   for (auto& bd : boids) {
+  //     if (&bd == &boid) { continue; }
+  //     auto ds = bd.bNav.pos() - boid.bNav.pos();
   //     auto dist = ds.mag();
   //     // Collision avoidance
   //     double pushRadius = 0.05;
-  //     double pushStrength = 1;
+  //     double pushStrength = 1.0;
   //     double push = exp(-al::pow2(dist / pushRadius)) * pushStrength;
   //     auto pushVector = ds.normalized() * push;
-  //     boid.bNav.pos() += pushVector;
-  //     b.bNav.pos() -= pushVector;
-  //     // Velocity matching
-  //     double matchRadius = 0.125;
-  //     double nearness = exp(-al::pow2(dist / matchRadius));
-  //     Vec2d veli = boid.bNav.vel();
-  //     Vec2d velj = b.bNav.vel();
-  //     // Take a weighted average of velocities according to nearness
-  //     boid.bNav.moveF(veli * (1 - 0.5 * nearness) + velj * (0.5 * nearness));
-  //     boid.bNav.moveF(velj * (1 - 0.5 * nearness) + veli * (0.5 * nearness));
+  //     boid.bNav.nudge(boid.bNav.pos() + pushVector, 0.6);
+  //     bd.bNav.nudge(bd.bNav.pos() - pushVector, 0.6);
+  //     // // Velocity matching
+  //     // double matchRadius = 0.125;
+  //     // double nearness = exp(-al::pow2(dist / matchRadius));
+  //     // Vec2d veli = boid.bNav.uf();
+  //     // Vec2d velj = b.bNav.uf();
+  //     // // Take a weighted average of velocities according to nearness
+  //     // boid.bNav.moveF(veli.mag() * (1 - 0.5 * nearness) + velj.mag() * (0.5 * nearness));
+  //     // boid.bNav.moveF(velj.mag() * (1 - 0.5 * nearness) + veli.mag() * (0.5 * nearness));
   //   }
   // }
 
@@ -187,15 +191,15 @@ struct MyApp : App {
     dt *= timeStep.get();
     time += dt;
     timeStamp += dt;
-    if (timeStamp > 1.f) {
+    if (timeStamp > 0.5f) {
       timeStamp = 0.0f;
       std::cout << "time: " << time << std::endl;
       randomizeFood();
     }
     // angle += 0.1;
-    for (auto& f : food) {
-        f += r()*0.3;
-    }
+    // for (auto& f : food) {
+    //     f += r()*0.3;
+    // }
 
     // The target (blue) aims for the origin (0,0,0) while the agent (red) aims
     // for the target. moveF(t) means "move forward" by amount t. faceToward
@@ -208,11 +212,12 @@ struct MyApp : App {
       // find nearest food
       findNearestFood(b, food);
       // eat food
-      if (al::dist(b.bNav.pos(), b.attention) < 0.1 && b.hunger > 0.3f) {
+      if (al::dist(b.bNav.pos(), b.attention) < 0.1) {
         b.hunger -= 0.01f;
         // std::cout << "EAT" << " : " << time << std::endl;
         // randomize(point);
-        b.bNav.faceToward(Vec3d(r(), r(), r()) * (1.67 - b.hunger), Vec3d(0, 1, 0), b.hunger*2.0f);
+        b.attention = (b.hunger > 0.167f) ? b.attention + (r() * (1.f - b.hunger)) : Vec3d(r(), r(), r());
+        b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), b.hunger);
       } else {
         b.hunger += 0.01f;
         b.bNav.faceToward(b.attention, Vec3d(0, 1, 0), 0.03);
