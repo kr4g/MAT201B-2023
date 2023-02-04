@@ -13,6 +13,7 @@
 const int MAX_BOIDS = 1000;
 const int MAX_PREDATORS = MAX_BOIDS * 0.5;
 const int CUBE_SIZE = 2;
+const float FOOD_RESET_RATE = 3.f;
 
 using namespace al;
 
@@ -57,7 +58,7 @@ double r() { return rnd::uniformS() * CUBE_SIZE; }
 
 struct MyApp : App {
   
-  Parameter timeStep{"Time Step", "", 0.1667, "", 0.0, 1.0};
+  Parameter timeStep{"Time Step", "", 1.f, "", 0.01, 10.0};
   Parameter pPredators{"Predators", "", 0.0f, 0.0f, 1.0f};
   // Nav agent;
   // Nav target;
@@ -200,7 +201,7 @@ struct MyApp : App {
     dt *= timeStep.get();
     time += dt;
     timeStamp += dt;
-    if (timeStamp > 1.0f) {
+    if (timeStamp > FOOD_RESET_RATE) {
       timeStamp = 0.0f;
       // std::cout << "time: " << time << std::endl;
       randomizeFoodList();
@@ -227,7 +228,6 @@ struct MyApp : App {
         b.hunger -= 0.01f;
         if (b.hunger < 0.0f) {
           b.hunger = 0.1f;
-          // randomizeFoodParticle(b.attention);
           // set attention to next closest food
           findNearestFood(b, food);
         }
@@ -255,7 +255,7 @@ struct MyApp : App {
 
   void onDraw(Graphics& g) override {
     // graphics / drawing settings
-    g.clear(1);
+    g.clear(0);
     g.meshColor();
     g.pointSize(10);
 
@@ -270,7 +270,7 @@ struct MyApp : App {
       mesh.vertex(0, 10, 0);
       mesh.vertex(0, 0, -10);
       mesh.vertex(0, 0, 10);
-      for (int i = 0; i < 6; i++) mesh.color(0,0,0);
+      for (int i = 0; i < 6; i++) mesh.color(1,1,1);
 
       g.draw(mesh);
     }
@@ -315,7 +315,6 @@ struct MyApp : App {
     //   g.draw(mesh);
     //   g.popMatrix();  // pop()
     //
-    g.color(1);
   }
 
   void onInit() override {
