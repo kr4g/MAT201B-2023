@@ -10,7 +10,7 @@
 #include "al/graphics/al_Shapes.hpp"
 #include "al/math/al_Functions.hpp"
 
-const int MAX_BOIDS = 5000;
+const int MAX_BOIDS = 9000;
 const float MAX_PREY_LIFESPAN = 100.0f;
 // const float MAX_PREDATORS = MAX_BOIDS * 0.1;
 const int CUBE_SIZE = 3;
@@ -127,9 +127,9 @@ class Boid {
 struct MyApp : App {
   
   Parameter timeStep{"Time Step", "", 1.33f, "", 0.01, 3.0};
-  Parameter pPredators{"Predators", "", 0.0f, 0.0f, 0.03f};
+  Parameter pPredators{"Predators", "", 0.0f, 0.01f, 0.03f};
   Parameter foodResetRate{"Food Reset Rate", "", 3.67f, 0.1667f, 10.f};
-  Parameter boidRespawnRate{"Boid Respawn Rate", "", 6.67f, 0.167f, 10.f};
+  // Parameter boidRespawnRate{"Boid Respawn Rate", "", 6.67f, 0.167f, 10.f};
   // Nav agent;
   // Nav target;
   std::vector<Boid> boids{MAX_BOIDS};
@@ -450,7 +450,7 @@ struct MyApp : App {
     // gui.add(t);
     gui.add(pPredators);
     gui.add(foodResetRate);
-    gui.add(boidRespawnRate);
+    // gui.add(boidRespawnRate);
     gui.add(timeStep);
   }
 };
