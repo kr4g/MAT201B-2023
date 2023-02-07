@@ -10,7 +10,7 @@
 #include "al/graphics/al_Shapes.hpp"
 #include "al/math/al_Functions.hpp"
 
-const int MAX_BOIDS = 9000;
+const int MAX_BOIDS = 6000;
 const float MAX_PREY_LIFESPAN = 100.0f;
 // const float MAX_PREDATORS = MAX_BOIDS * 0.1;
 const int CUBE_SIZE = 3;
@@ -127,7 +127,7 @@ class Boid {
 struct MyApp : App {
   
   Parameter timeStep{"Time Step", "", 1.33f, "", 0.01, 3.0};
-  Parameter pPredators{"Predators", "", 0.0f, 0.01f, 0.03f};
+  Parameter pPredators{"Predators", "", 0.001f, 0.001f, 0.03f};
   Parameter foodResetRate{"Food Reset Rate", "", 3.67f, 0.1667f, 10.f};
   // Parameter boidRespawnRate{"Boid Respawn Rate", "", 6.67f, 0.167f, 10.f};
   // Nav agent;
@@ -167,15 +167,15 @@ struct MyApp : App {
     // create a prototype predator body
     predMesh.primitive(Mesh::TRIANGLE_FAN);
     predMesh.vertex(0, 0, -2);
-    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.5), 0);
+    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.67), rnd::uniform(0.0, 0.33));
     predMesh.vertex(0, 1, 0);
-    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.5), 0);
+    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.67), rnd::uniform(0.0, 0.33));
     predMesh.vertex(-1, 0, 0);
-    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.5), 0);
+    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.67), rnd::uniform(0.0, 0.33));
     predMesh.vertex(1, 0, 0);
-    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.5), 0);
+    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.67), rnd::uniform(0.0, 0.33));
     predMesh.vertex(0, 1, 0);
-    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.5), 0);
+    predMesh.color(rnd::uniform(0.5, 1.0), rnd::uniform(0.0, 0.67), rnd::uniform(0.0, 0.33));
 
     // create a prototype prey body
     preyMesh.primitive(Mesh::TRIANGLE_FAN);
@@ -189,6 +189,13 @@ struct MyApp : App {
     preyMesh.color(0, 0, rnd::uniform(0.5, 1.0));
     preyMesh.vertex(0, 1, 0);
     preyMesh.color(0, 0, rnd::uniform(0.5, 1.0));
+
+    foodMesh.primitive(Mesh::POINTS);
+    for (int i = 0; i < food.size(); i++) {
+      food[i] = Vec3f(rnd::uniformS(), rnd::uniformS(), rnd::uniformS()) * CUBE_SIZE;
+      foodMesh.vertex(food[i]);
+      foodMesh.color(0.5, 0.25, 0);
+    }
   }
   
   // void handleBounce(Boid &b) {
@@ -260,8 +267,11 @@ struct MyApp : App {
   // }
 
   void randomizeFoodList() {
-    for (auto& f : food) {
-      f.set(r(), r(), r());
+    // randomize food positions
+    // and update mesh vertices
+    for (int i = 0; i < food.size(); i++) {
+      randomizeFoodParticle(food[i]);
+      foodMesh.vertices()[i] = food[i];
     }
   }
 
@@ -278,15 +288,17 @@ struct MyApp : App {
 
   void setUp() {
     // randomize food positions
-    randomizeFoodList();
+    // randomizeFoodList();
     
     // randomize boids
     for (auto& b : boids) {
       b.type = rnd::prob(pPredators.get());  // probability of being a predator
       b.mutation = rnd::prob(0.7) * rnd::uniform();  // random mutation
       b.mutationRate = rnd::uniform(b.mutation) * rnd::uniform();  // random mutation rate proportional to mutation
+      b.age = 0.0f;
       b.lifespan = rnd::uniform(MAX_PREY_LIFESPAN - .5*MAX_PREY_LIFESPAN*b.mutation*b.mutationRate,
                                 MAX_PREY_LIFESPAN + .5*MAX_PREY_LIFESPAN*b.mutation*b.mutationRate);  // random lifespan
+      b.lifeStatus = b.age <= b.lifespan;
       randomize(b.bNav);
     }
   }
@@ -393,7 +405,7 @@ struct MyApp : App {
       mesh.vertex(0, 10, 0);
       mesh.vertex(0, 0, -10);
       mesh.vertex(0, 0, 10);
-      for (int i = 0; i < 6; i++) mesh.color(1,1,1);
+      for (int i = 0; i < CUBE_SIZE; i++) mesh.color(1,1,1);
 
       g.draw(mesh);
     }
@@ -418,11 +430,11 @@ struct MyApp : App {
       }
     }
 
-    // for (auto& f : food) {
-    //   foodMesh.vertex(f);
-    //   foodMesh.color(0.5, 0.25, 0);
-    // }
-    // g.draw(foodMesh);
+    // draw food
+    // g.scale(0.01);
+    // g.pointSize(20);
+    // g.meshColor();
+    g.draw(foodMesh);
 
     // {
     //   Nav& a(agent);
