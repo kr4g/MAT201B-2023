@@ -1,6 +1,10 @@
 // Karl Yerkes
 // 2022-01-20
 
+/*
+  PRESS '1' TO GENERATE A NEW VARIATION
+*/
+
 #include "l-system.hpp"
 
 #include "al/app/al_App.hpp"

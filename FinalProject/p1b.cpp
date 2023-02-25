@@ -1,6 +1,11 @@
 // Karl Yerkes
 // 2022-01-20
 
+
+/*
+  "ANIMATED" L-SYSTEM PLANTLIKE JELLYFISH/SQUID THING 
+*/
+
 #include "l-system.hpp"
 
 #include "al/app/al_App.hpp"
@@ -79,6 +84,10 @@ void drawBranch(Mesh &mesh, const std::vector<Vec3f> &pVec, const std::vector<RG
 // }
 
 struct AlloApp : App {
+  Parameter timeStep{"Time Step", "", 0.33f, "", 0.01, 3.0};
+  Parameter epsilon{"Epsilon", "", 0.000000001, "", 0.0001, 0.1};
+  Parameter randomness{"Randomness", "", 0.000000001, "", 0.0, 1.0};
+  // Parameter increment{"Increment", "", 0.f, "", -0.001, 0.001};
   // Parameter pointSize{"/pointSize", "", 1.0, 0.0, 2.0};
 
   Axes axes;
@@ -87,7 +96,11 @@ struct AlloApp : App {
 
   float angle = 0;
   float time = 0.f;
-  float interval = 0.667f;
+  // float interval = 0.667f;
+  float interval = 0.06f;
+  // double eps = 0.001;
+  // double inc = increment.get();
+  // double inc = 0.00001;
 
   std::vector<State> state;  // push_back / pop_back
 
@@ -103,6 +116,9 @@ struct AlloApp : App {
     // set up GUI
     auto GUIdomain = GUIDomain::enableGUI(defaultWindowDomain());
     auto &gui = GUIdomain->newGUI();
+    gui.add(timeStep);
+    gui.add(epsilon);
+    gui.add(randomness);
   }
 
   void onCreate() override { 
@@ -122,16 +138,18 @@ struct AlloApp : App {
     }
     for (int i = 0; i < numBranches; i++) {
       std::string result = generateString(lsys, n);
-      float amt = 0.01f * pow(2, i);
+      float amt = 0.01f * pow(1.0 + i * epsilon.get(), i);
+      // float amt = 0.01f * pow(1.79, i);
+      double r_scale = randomness.get();
       int sign = 1;
       for (char c : result) {
         float d = rnd::uniformS();
         if (c == 'A') {
           // float s = 
-          branchPoints[i].push_back(Vec3f(sign*0.01 + rnd::uniform(0.33, 0.75)*amt, rnd::uniform(0.1667, 0.33)*r(), rnd::uniform(0.1667, 0.33)*r()));
+          branchPoints[i].push_back(Vec3f(sign*0.01 + rnd::uniform(0.33, 0.75)*amt*r_scale, 0.1 + rnd::uniform(0.1667, 0.33)*r()*r_scale, 0.1 + rnd::uniform(0.1667, 0.33)*r()*r_scale));
           branchColors[i].push_back(RGB(0, rnd::uniform(0.667, 1.0), rnd::uniform(0.001, 0.1667)));
         } else if (c == 'B') {
-          branchPoints[i].push_back(Vec3f(sign*0.001 + rnd::uniform(0.1667, 0.667)*amt, rnd::uniform(0.25, 1.667)*r(), rnd::uniform(0.25, 1.667)*r()));
+          branchPoints[i].push_back(Vec3f(sign*0.001 + rnd::uniform(0.1667, 0.667)*amt*r_scale, 0.1 + rnd::uniform(0.25, 1.667)*r()*r_scale, 0.1 + rnd::uniform(0.25, 1.667)*r()*r_scale));
           branchColors[i].push_back(RGB(rnd::uniform(0.667, 1.0), 0, rnd::uniform(0.125, 0.33)));
         }
         amt += 0.001f;
@@ -150,7 +168,10 @@ struct AlloApp : App {
   
   // int index = 0;
   void onAnimate(double dt) override {
+    dt = dt * timeStep.get();
     time += dt;
+    // inc = (eps > 0.1) ? inc * 0.9 : (eps < 0.00001) ? inc * 1.1 : increment.get();
+    // eps += inc;
     if (time > interval) {
       time = 0.f;
       evaluate(algae, N);
@@ -164,7 +185,7 @@ struct AlloApp : App {
     g.clear(0);
     g.meshColor();
 
-    g.rotate(angle, 0, 1, 0);
+    // g.rotate(angle, 0, 1, 0);
     // axes.draw(g);
 
     Mesh mesh(Mesh::LINES);
