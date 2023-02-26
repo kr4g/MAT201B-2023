@@ -103,6 +103,9 @@ void drawBranch(Mesh &mesh, const std::vector<Vec3f> &points, const std::vector<
 }
 
 struct AlloApp : App {
+  Parameter timeStep{"Time Step", "", 0.33f, "", 0.01, 3.0};
+  Parameter epsilon{"Epsilon", "", 0.000000001, "", 0.0001, 0.1};
+  Parameter randomness{"Randomness", "", 0.000000001, "", 0.0, 1.0};
   // Parameter pointSize{"/pointSize", "", 1.0, 0.0, 2.0};
 
   Axes axes;
@@ -113,6 +116,9 @@ struct AlloApp : App {
     // set up GUI
     auto GUIdomain = GUIDomain::enableGUI(defaultWindowDomain());
     auto &gui = GUIdomain->newGUI();
+    gui.add(timeStep);
+    gui.add(epsilon);
+    gui.add(randomness);
   }
 
   void onCreate() override { 
@@ -143,11 +149,11 @@ struct AlloApp : App {
       // currentPoint = state.back().pos;
       // currentColor = state.back().color;
       if (c == '0') {
-        nextPoint = currentPoint + Vec3f(0, 1, 0);
+        nextPoint = currentPoint + Vec3f(0.1*r(), 0.75*r(), 0.1*r())*0.667;
         nextColor = RGB(0, 1, 0);
         // cout << "0" << endl;
       } else if (c == '1') {
-        nextPoint = currentPoint + Vec3f(1, 0, 1);
+        nextPoint = currentPoint + Vec3f(0.25*r(), 0.1*r(), 0.5*r())*0.5;
         nextColor = RGB(0.5, 0.25, 0);
         // cout << "1" << endl;
       } else if (c == '[') {
@@ -176,14 +182,17 @@ struct AlloApp : App {
   float interval = 1.f;
   int index = 0;
   void onAnimate(double dt) override {
-    // time += dt;
-    // if (time > interval) {
-    //   time = 0.f;
-    //   index = (index < N) ? index + 1 : N;
-    // }
-      // angle += 0.1;
-      nav().faceToward(Vec3d(0, 0, 0));
-  }
+      dt = dt * timeStep.get();
+      time += dt;
+      // inc = (eps > 0.1) ? inc * 0.9 : (eps < 0.00001) ? inc * 1.1 : increment.get();
+      // eps += inc;
+      if (time > interval) {
+        time = 0.f;
+        // index = (index < N) ? index + 1 : N;
+      }
+        angle += 0.1;
+        nav().faceToward(Vec3d(0, 0, 0));
+    }
 
   void onDraw(Graphics &g) override {
     g.clear(0);
