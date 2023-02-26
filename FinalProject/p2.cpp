@@ -29,6 +29,19 @@ Example 2:
   1: draw a line segment
   [: push position and angle, turn left 45 degrees
   ]: pop position and angle, turn right 45 degrees
+
+
+  The push and pop refer to a LIFO stack (more 
+  technical grammar would have separate symbols 
+  for "push position" and "turn left"). 
+  
+  When the turtle interpretation encounters a '[', 
+  the current position and angle are saved, and are 
+  then restored when the interpretation encounters 
+  a ']'. 
+  
+  If multiple values have been "pushed," then a 
+  "pop" restores the most recently saved values. 
 */
 LSystem tree = {
     '0',             // axiom
@@ -133,7 +146,6 @@ struct AlloApp : App {
         nextPoint = currentPoint + Vec3f(0, 1, 0);
         nextColor = RGB(0, 1, 0);
         // cout << "0" << endl;
-        // drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
       } else if (c == '1') {
         nextPoint = currentPoint + Vec3f(1, 0, 1);
         nextColor = RGB(0.5, 0.25, 0);
