@@ -151,20 +151,24 @@ struct AlloApp : App {
       if (c == '0') {
         nextPoint = currentPoint + Vec3f(0.1*r(), 0.75*r(), 0.1*r())*0.667;
         nextColor = RGB(0, 1, 0);
+        drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
+        currentPoint = nextPoint;
+        currentColor = nextColor;
         // cout << "0" << endl;
       } else if (c == '1') {
         nextPoint = currentPoint + Vec3f(0.25*r(), 0.1*r(), 0.5*r())*0.5;
         nextColor = RGB(0.5, 0.25, 0);
+        drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
+        currentPoint = nextPoint;
+        currentColor = nextColor;
         // cout << "1" << endl;
       } else if (c == '[') {
         state.push_back(State{currentPoint, currentColor});
-        // root = mesh.vertices().back();
+        // CHANGE CURRENT BRANCH
       } else if (c == ']') {
         state.pop_back();
+        // RESTORE PREVIOUS BRANCH
       }
-      drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
-      currentPoint = nextPoint;
-      currentColor = nextColor;
     }
   }
 
