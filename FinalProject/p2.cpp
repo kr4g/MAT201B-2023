@@ -111,12 +111,12 @@ struct AlloApp : App {
   }
 
   void evaluate(const std::string &str, Mesh &mesh) {
-    // struct State {
-    //   Vec3f pos;  // position
-    //   // Quatf rot;  // orientation
-    //   RGB color;  // color
-    // };
-    // std::vector<State> state;  // push_back / pop_back
+    struct State {
+      Vec3f pos;  // position
+      // Quatf rot;  // orientation
+      RGB color;  // color
+    };
+    std::vector<State> state;  // push_back / pop_back
     
     Vec3f currentPoint(Vec3f(0, 0, 0));
     RGB currentColor(RGB(1, 1, 1));
@@ -124,21 +124,25 @@ struct AlloApp : App {
     Color nextColor;
     mesh.vertex(currentPoint);
     mesh.color(currentColor);
+
+    state.push_back(State{currentPoint, currentColor});
     for (char c : str) {
+      // currentPoint = state.back().pos;
+      // currentColor = state.back().color;
       if (c == '0') {
-        nextPoint = currentPoint + Vec3f(0.1*r(), r(), 0.1*r());
-        nextColor = RGB(1, 0, 0.33);
+        nextPoint = currentPoint + Vec3f(0, 1, 0);
+        nextColor = RGB(0, 1, 0);
         // cout << "0" << endl;
         // drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
       } else if (c == '1') {
-        nextPoint = currentPoint + Vec3f(r(), 0.1*r(), 0.5*r());
-        nextColor = RGB(0.1667, 1, 0);
+        nextPoint = currentPoint + Vec3f(1, 0, 1);
+        nextColor = RGB(0.5, 0.25, 0);
         // cout << "1" << endl;
-      // } else if (c == '[') {
-      //   state.push_back(State{root, RGB(1, 1, 1)});
-      //   root = mesh.vertices().back();
-      // } else if (c == ']') {
-      //   state.pop_back();
+      } else if (c == '[') {
+        state.push_back(State{currentPoint, currentColor});
+        // root = mesh.vertices().back();
+      } else if (c == ']') {
+        state.pop_back();
       }
       drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
       currentPoint = nextPoint;
@@ -185,12 +189,12 @@ struct AlloApp : App {
     mesh.vertex(currentPoint);
     mesh.color(currentColor);
 
-    drawLine(mesh, currentPoint, Vec3f(0, 1, 0), currentColor, RGB(1, 0, 0));
+    // drawLine(mesh, currentPoint, Vec3f(0, 1, 0), currentColor, RGB(1, 0, 0));
     // drawLine(mesh, Vec3f(0, 1, 0), Vec3f(0, 1, 1), RGB(1, 0, 0), RGB(0, 1, 0));
     // drawLine(mesh, Vec3f(0, 1, 1), Vec3f(0, 2, 1), RGB(0, 1, 0), RGB(0, 0, 1));
     // drawLine(mesh, Vec3f(0, 2, 1), Vec3f(0, 2, 2), RGB(0, 0, 1), RGB(1, 1, 1));
 
-    // evaluate(result, mesh);
+    evaluate(result, mesh);
     // cout << mesh.vertices().size() << endl;
 
     // cout << index << endl;
