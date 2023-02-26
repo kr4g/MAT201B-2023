@@ -164,9 +164,10 @@ struct AlloApp : App {
         // cout << "1" << endl;
       } else if (c == '[') {
         // CHANGE CURRENT BRANCH
+        State tempState{currentPoint, currentColor};
         currentPoint = state.back().pos;
         currentColor = state.back().color;
-        state.push_back(State{currentPoint, currentColor});
+        state.push_back(tempState);
       } else if (c == ']') {
         // RESTORE PREVIOUS BRANCH
         currentPoint = state.back().pos;
