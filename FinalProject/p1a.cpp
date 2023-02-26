@@ -61,7 +61,12 @@ struct Axes {
     g.draw(mesh);
   }
 };
-
+void drawLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
+    mesh.vertex(start);
+    mesh.color(startColor);
+    mesh.vertex(end);
+    mesh.color(nextColor);
+}
 void drawBranch(Mesh &mesh, const std::vector<Vec3f> &pVec, const std::vector<RGB> &cVec, const Vec3f &startPoint, const RGB &startColor) {
     Vec3f currentPoint = startPoint;
     Color currentColor = startColor;

@@ -53,12 +53,6 @@ std::string generateString(LSystem lsys, int n) {
     return current;
 }
 
-void drawLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
-    mesh.vertex(start);
-    mesh.color(startColor);
-    mesh.vertex(end);
-    mesh.color(nextColor);
-}
 
 // void evaluate(Mesh &mesh, const LSystem &lsys, const char &axiom) {
 //     Vec3f current = state.back().pos;

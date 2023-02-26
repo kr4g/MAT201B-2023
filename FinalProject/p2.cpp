@@ -68,6 +68,13 @@ struct Axes {
   }
 };
 
+void drawLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
+    mesh.vertex(start);
+    mesh.color(startColor);
+    mesh.vertex(end);
+    mesh.color(nextColor);
+}
+
 void drawBranch(Mesh &mesh, const std::vector<Vec3f> &points, const std::vector<RGB> &colors, const Vec3f &startPoint, const RGB &startColor) {
     Vec3f currentPoint = startPoint;
     Color currentColor = startColor;
@@ -98,7 +105,7 @@ struct AlloApp : App {
   void onCreate() override { 
     // state.push_back(State{Vec3f(0, 0, 0), RGB(1, 1, 1)});
     result = generateString(tree, N);
-    cout << result << endl;
+    cout << "l-sys tree:\n" << result << endl;
     // evaluate(tree, N);
     nav().pos(0, 0, 10); 
   }
@@ -167,7 +174,7 @@ struct AlloApp : App {
     g.meshColor();
 
     g.rotate(angle, 0, 1, 0);
-    // axes.draw(g);
+    axes.draw(g);
 
     Mesh mesh(Mesh::LINES);
     // evaluate(result, mesh);
