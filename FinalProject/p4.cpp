@@ -130,50 +130,44 @@ struct AlloApp : App {
   }
 
   void evaluate(const std::string &str, Mesh &mesh) {
-    struct State {
-      Vec3f pos;  // position
-      // Quatf rot;  // orientation
-      RGB color;  // color
+
+    struct State : al::Pose {
+        al::Color color;
+
+        State(const al::Vec3f& position, const al::Color& color)
+            : al::Pose(position), color(color)
+        {}
     };
+
     std::vector<State> state;  // push_back / pop_back
     
-    Vec3f currentPoint(Vec3f(0, 0, 0));
-    RGB currentColor(RGB(1, 1, 1));
-    Vec3f nextPoint;
-    Color nextColor;
-    mesh.vertex(currentPoint);
-    mesh.color(currentColor);
+    state.push_back(State{al::Vec3f(0, 0, 0), al::Color(1, 1, 1)});
+    al::Pose& p(state.back());
 
-    state.push_back(State{currentPoint, currentColor});
+    // the origin
+    mesh.vertex(state.back().pos());
+    mesh.color(state.back().color);
+
     for (char c : str) {
       // currentPoint = state.back().pos;
       // currentColor = state.back().color;
-      if (c == '0') {
+      if (c == '0') {  // draw a line segment ending in a leaf
         // cout << "0" << endl;
-        nextPoint = currentPoint + Vec3f(0, 0.67*r(), 0);
-        nextColor = RGB(0, 1, 0);
-        drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
-        drawLine(mesh, currentPoint, currentPoint + Vec3f(0, -0.67*r(), 0), currentColor, nextColor);
-        // currentPoint = nextPoint;
-        // currentColor = nextColor;
-      } else if (c == '1') {
-        nextPoint = currentPoint + Vec3f(0.7*r(), 0, 0.5*r());
-        nextColor = RGB(0.5, 0.25, 0);
-        drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
-        currentPoint = nextPoint;
-        currentColor = nextColor;
+        mesh.vertex(state.back().pos()); // instead of `currentPoint`
+        state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
+        mesh.vertex(state.back().pos()); // instead of `nextPoint`
+      } else if (c == '1') {  // draw a line segment
         // cout << "1" << endl;
+        mesh.vertex(state.back().pos()); // instead of `currentPoint`
+        state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
+        mesh.vertex(state.back().pos()); // instead of `nextPoint`
       } else if (c == '[') {
         // CHANGE CURRENT BRANCH
-        State tempState{currentPoint, currentColor};
-        currentPoint = state.back().pos;
-        currentColor = state.back().color;
-        state.push_back(tempState);
+        // Push current state onto stack
+        // Rotate pose
       } else if (c == ']') {
         // RESTORE PREVIOUS BRANCH
-        state.pop_back();
-        currentPoint = state.back().pos;
-        currentColor = state.back().color;
+        // Pop previous state from stack
       }
     }
   }
@@ -192,15 +186,16 @@ struct AlloApp : App {
   float interval = 1.f;
   int index = 0;
   void onAnimate(double dt) override {
-      dt = dt * timeStep.get();
-      time += dt;
-      // inc = (eps > 0.1) ? inc * 0.9 : (eps < 0.00001) ? inc * 1.1 : increment.get();
-      // eps += inc;
-      if (time > interval) {
-        time = 0.f;
-        // index = (index < N) ? index + 1 : N;
-      }
-        angle += 0.1;
+    auto& v((mesh.vertices()));
+    //   dt = dt * timeStep.get();
+    //   time += dt;
+    //   // inc = (eps > 0.1) ? inc * 0.9 : (eps < 0.00001) ? inc * 1.1 : increment.get();
+    //   // eps += inc;
+    //   if (time > interval) {
+    //     time = 0.f;
+    //     // index = (index < N) ? index + 1 : N;
+    //   }
+    //     angle += 0.1;
         nav().faceToward(Vec3d(0, 0, 0));
     }
 

@@ -61,6 +61,7 @@ struct Axes {
     g.draw(mesh);
   }
 };
+
 void drawLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
     mesh.vertex(start);
     mesh.color(startColor);
