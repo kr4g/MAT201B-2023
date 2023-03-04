@@ -165,11 +165,23 @@ struct AlloApp : App {
         // CHANGE CURRENT BRANCH
         // Push current state onto stack
         // Rotate pose
+        p.pos() += p.uf();
       } else if (c == ']') {
         // RESTORE PREVIOUS BRANCH
         // Pop previous state from stack
       }
     }
+
+    // stack.back(); // top
+    // stack.pop(); // pop
+    // stack.push_back(stack.back()); // push a copy of top
+
+
+    // mesh.vertices(); // ...is the list of redundant vertices
+    // mesh.compress(); // vertices + indices represetnation
+    // mesh.vertices(); // ...is the list of unique vertices
+    // mesh.indices();  // ...is the list of connectedness of vertices
+
   }
 
   bool onKeyDown(const Keyboard &k) override {
@@ -186,7 +198,7 @@ struct AlloApp : App {
   float interval = 1.f;
   int index = 0;
   void onAnimate(double dt) override {
-    auto& v((mesh.vertices()));
+    // auto& v((mesh.vertices()));
     //   dt = dt * timeStep.get();
     //   time += dt;
     //   // inc = (eps > 0.1) ? inc * 0.9 : (eps < 0.00001) ? inc * 1.1 : increment.get();

@@ -53,7 +53,6 @@ std::string generateString(LSystem lsys, int n) {
     return current;
 }
 
-
 // void evaluate(Mesh &mesh, const LSystem &lsys, const char &axiom) {
 //     Vec3f current = state.back().pos;
 //     // cout << current << endl;
