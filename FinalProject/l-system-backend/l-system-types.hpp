@@ -11,6 +11,11 @@ enum class LSystemType {
     // HilbertCurve
 };
 
+const std::map<LSystemType, std::string> TYPE_NAMES {
+    {LSystemType::BOURKE_BUSH_2, "BOURKE_BUSH_2"},
+    {LSystemType::BOURKE_ALGAE_2, "BOURKE_ALGAE_2"}
+};
+
 // Definitions for L-System types
 const std::map<LSystemType, LSystem> TYPE_DEF {
     {LSystemType::BOURKE_BUSH_2, LSystem(
@@ -20,9 +25,8 @@ const std::map<LSystemType, LSystem> TYPE_DEF {
         22.5f,  // ANGLE
         1.0f,  // LENGTH
         0.95f,  // SCALE FACTOR
-        {{'F', "FF+[+F-F-F]-[-F+F+F]"}},  // RULES
-        // nullptr  // RENDER ACTIONS
-    )},
+        {{'F', "FF+[+F-F-F]-[-F+F+F]"}})  // RULES
+    },
 
     {LSystemType::BOURKE_ALGAE_2, LSystem(
         {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y'},  // VARIABLES
@@ -56,8 +60,7 @@ const std::map<LSystemType, LSystem> TYPE_DEF {
             {'w', "fFFF[+s]x"},
             {'x', "fFFF[+s]"},
             {'y', "Fy"}
-        },
-        // nullptr  // RENDER ACTIONS
-    )}
+        })
+    }
 };
 

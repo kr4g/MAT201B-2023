@@ -11,9 +11,9 @@ using namespace std;
 #include <utility>
 
   // VISUAL RENDERING
-  void renderLSystem(const std::string &str, const al::Vec3f &startPoint, float decay, al::Mesh &mesh) {
+  void renderLSystem(const LSystem &lsys, const std::string &str, const al::Vec3f &startPoint, al::Mesh &mesh) {
 
-    // float decayRate = 0.9;  // *= 0.9 each iteration so that the draw actions become smaller and smaller
+    // float decayRate = lsys.scaleFactor;
 
     struct State : al::Pose {
         al::Color color;
@@ -46,15 +46,12 @@ using namespace std;
     // mesh.indices();  // ...is the list of connectedness of vertices
 
     for (char c : str) {
-        if (c == '0') {  // draw a line segment ending in a leaf
-            mesh.vertex(state.back().pos());
-            state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
-            mesh.vertex(state.back().pos());
-        } else if (c == '1') {  // draw a line segment
-            // cout << "branch: " << p.pos() << endl;
-            mesh.vertex(state.back().pos());
-            state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
-            mesh.vertex(state.back().pos());
+        if (c == 'F') {  // Move forward by `LSystem.length` drawing a line
+            // ...
+        } else if (c == '+') {
+            
+        } else if (c == '-') {
+
         } else if (c == '[') {  // CHANGE CURRENT BRANCH
             // Push current state onto stack
             state.push_back(state.back());
@@ -66,19 +63,29 @@ using namespace std;
     // g.draw(mesh);
   }
 
-  void generateAndRenderBranches(std::vector<al::Vec3f> &vertices, const LSystem &lsys, float probability, std::pair range) {
-    // mesh.compress(); // vertices + indices represetnation
-    // mesh.vertices(); // ...is the list of unique vertices
-    // mesh.indices();  // ...is the list of connectedness of vertices
-    // mesh.compress();
-    int n = range.second;  // TODO: random selection from range
-    for (auto vert: vertices) {
-        if (probability > rnd::uniform()) {  // randomly generate branches
-            al::Mesh m(al::Mesh::LINES);
-            renderLSystem(generateString(lsys, n), vert, 0.9, m);
-        }
-        // cout << vert << endl;
-        // mesh.vertex(vert);
-        // mesh.color(1, 1, 1);
-    }
+  // AUDIO RENDERING
+  void renderLSystem(const LSystem &lsys, const std::string &str, float f) {
+
+
   }
+
+
+
+
+
+//   void generateAndRenderBranches(std::vector<al::Vec3f> &vertices, const LSystem &lsys, float probability, std::pair<int, int> range) {
+//     // mesh.compress(); // vertices + indices represetnation
+//     // mesh.vertices(); // ...is the list of unique vertices
+//     // mesh.indices();  // ...is the list of connectedness of vertices
+//     // mesh.compress();
+//     int n = range.second;  // TODO: random selection from range
+//     for (auto vert: vertices) {
+//         if (probability > rnd::uniform()) {  // randomly generate branches
+//             al::Mesh m(al::Mesh::LINES);
+//             renderLSystem(generateString(lsys, n), vert, 0.9, m);
+//         }
+//         // cout << vert << endl;
+//         // mesh.vertex(vert);
+//         // mesh.color(1, 1, 1);
+//     }
+//   }

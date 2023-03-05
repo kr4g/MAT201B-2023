@@ -20,16 +20,6 @@ using namespace al;
 #include <utility>
 using namespace std;
 
-const int N = 7;  // number of iterations for main system
-
-// --------------------------------------------------------------
-// 0. GET THE L-SYSTEM TYPE FOR THE MAIN SYSTEM
-// --------------------------------------------------------------
-// The main l-system will work like an interconnected root network 
-// where ertain vertices in the mesh can generate branches made of 
-// different L-Systems.
-LSystem mainSystemType = TYPE_DEF[LSystemType::BOURKE_ALGAE_2];  // returns an initialized `LSystem` struct for the given type
-
 struct Axes {
   void draw(Graphics &g) {
     Mesh mesh(Mesh::LINES);
@@ -58,12 +48,24 @@ struct Axes {
   }
 };
 
+LSystemType MAIN_LSYS_TYPE{LSystemType::BOURKE_ALGAE_2};
+const int N{9};  // number of iterations for main system
+
+// --------------------------------------------------------------
+// 0. GET THE L-SYSTEM TYPE FOR THE MAIN SYSTEM
+// --------------------------------------------------------------
+// This is the type of the main system.
+// The main l-system will work like an interconnected root network 
+// where ertain vertices in the mesh can generate branches made
+// of different L-Systems.
+LSystem mainSystem{TYPE_DEF.at(MAIN_LSYS_TYPE)};
+
+
 struct AlloApp : App {
 //   Parameter timeStep{"Time Step", "", 0.33f, "", 0.01, 3.0};
 //   Parameter epsilon{"Epsilon", "", 0.000000001, "", 0.0001, 0.1};
 //   Parameter randomness{"Randomness", "", 0.000000001, "", 0.0, 1.0};
   // Parameter pointSize{"/pointSize", "", 1.0, 0.0, 2.0};
-
   Axes axes;
 
   std::string mainSystemString;
@@ -78,10 +80,14 @@ struct AlloApp : App {
   }
 
   void onCreate() override {
+    // --------------------------------------------------------------
     // 1. GENERATE THE MAIN L-SYSTEM STRING
+    // --------------------------------------------------------------
     // This only generates the string which will be parsed later.
-    mainSystemString = generateString(mainSystemType, N);
-    cout << "main l-sys type:\n" << mainSystemString << endl;
+    mainSystemString = generateString(mainSystem, N);
+    cout << "main l-sys type: " << TYPE_NAMES.at(MAIN_LSYS_TYPE) << endl;
+    cout << "iterations: " << N << endl;
+    cout << "string:\n" << mainSystemString << endl;
 
     nav().pos(0, 0, 10); 
   }
@@ -119,25 +125,18 @@ struct AlloApp : App {
     axes.draw(g);
 
     // --------------------------------------------------------------
-    // 2. RENDER THE MAIN L-SYSTEM STRING
+    // 2a. RENDER THE MAIN L-SYSTEM STRING (visually)
     // --------------------------------------------------------------
-    Mesh mainSystemMesh(Mesh::LINES);
+    // Mesh mainSystemMesh(Mesh::LINES);
 
-    // a. visually
-    renderLSystem(mainSystemType,    // the LSystem struct for the main system
-                  mainSystemString,  // the string generated from the main system
-                  STD_RULES_DRAW,    // the render rules for parsing the string
-                  Vec3f(0, 0, 0),    // the starting position of the main system
-                  mainSystemMesh);   // the mesh to render the main system to
+    // // a. visually
+    // renderLSystem(mainSystem,    // the LSystem struct for the main system
+    //               mainSystemString,  // the string generated from the main system
+    //               STD_RULES_DRAW,    // the draw rules for parsing the string
+    //               Vec3f(0, 0, 0),    // the starting position of the main system
+    //               mainSystemMesh);   // the mesh to render the main system to
 
-    g.draw(mainSystemMesh);
-
-    // b. sonically
-    renderLSystem(mainSystemType,    // the LSystem struct for the main system
-                  mainSystemString,  // the string generated from the main system
-                  STD_RULES_FM,      // the sonification rules for parsing the string
-                  Vec3f(0, 0, 0),    // the starting position of the main system
-                  mainSystemMesh);   // the mesh to render the main system to
+    // g.draw(mainSystemMesh);
 
     // --------------------------------------------------------------
     // 3. GENERATE AND RENDER BRANCHES
