@@ -1,12 +1,8 @@
-#include "al/app/al_App.hpp"
-#include "al/app/al_GUIDomain.hpp"
-#include "al/math/al_Random.hpp"
-
 #include <vector>
 #include <map>
 #include <string>
 
-using namespace al;
+// using namespace al;
 using namespace std;
 
 // double r() { return rnd::uniformS(); }
@@ -28,14 +24,14 @@ struct LSystem {
     float scaleFactor;                          // the rate at which consecutive render actions are scaled (e.g. 0.5 means each action is half the size of the previous one)
 
     std::map<char, std::string>  rules;         // substitution rules for each variable and constant
-    std::map<char, std::string>* renderActions; // draw/sound actions for each variable and constant (NOTE:  this is a pointer to a map, so that we can easily swap out the 
+    // std::map<char, std::string>* renderActions; // draw/sound actions for each variable and constant (NOTE:  this is a pointer to a map, so that we can easily swap out the 
                                                 //                                                           map for a different one. e.g. draw actions vs. sound actions)
 
     // -------------------------------------------------
     // -------------------------------------------------
 
-    // Constructor to set all L-System data
-    LSystem(std::vector<char> v, std::vector<char> c, std::string a, float ang, float l, float sf, std::map<char, std::string> r, std::map<char, std::string>* ra) {
+    // Constructors
+    LSystem(std::vector<char> v, std::vector<char> c, std::string a, float ang, float l, float sf, std::map<char, std::string> r) {
         variables = v;
         constnats = c;
         axiom = a;
@@ -43,11 +39,11 @@ struct LSystem {
         length = l;
         scaleFactor = sf;
         rules = r;
-        renderActions = ra;
+        // renderActions = ra;
     }
 
-    // Set renderActions pointer
-    void setRenderActions(std::map<char, std::string>* ra) { renderActions = ra; }
+    // // Set renderActions pointer
+    // void setRenderActions(std::map<char, std::string>* ra) { renderActions = ra; }
 };
 
 // Generate the L-System string given an L-System and the number of iterations
