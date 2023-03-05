@@ -1,11 +1,18 @@
 // Karl Yerkes
 // 2022-01-20
 
-#include "l-system.hpp"
+// #include "l-system.hpp"
+#include "backend.hpp"
 
 #include "al/app/al_App.hpp"
 #include "al/app/al_GUIDomain.hpp"
+
+#include "Gamma/DFT.h"         // STFT
+#include "Gamma/Envelope.h"    //Env<2>
+#include "Gamma/Oscillator.h"  // Sine<>
+#include "al/app/al_DistributedApp.hpp"
 #include "al/math/al_Random.hpp"
+#include "al/scene/al_DistributedScene.hpp"
 
 using namespace al;
 
@@ -14,44 +21,9 @@ using namespace al;
 #include <iostream>
 using namespace std;
 
-const int N = 7;  // number of iterations
+const int N = 7;  // number of iterations for main system
 
-/*
-Example 2: 
-  Fractal (binary) tree
-
-  variables : 0, 1
-  constants: “[”, “]”
-  axiom  : 0
-  rules  : (1 → 11), (0 → 1[0]0)
-
-  0: draw a line segment ending in a leaf
-  1: draw a line segment
-  [: push position and angle, turn left 45 degrees
-  ]: pop position and angle, turn right 45 degrees
-
-
-  The push and pop refer to a LIFO stack (more 
-  technical grammar would have separate symbols 
-  for "push position" and "turn left"). 
-  
-  When the turtle interpretation encounters a '[', 
-  the current position and angle are saved, and are 
-  then restored when the interpretation encounters 
-  a ']'. 
-  
-  If multiple values have been "pushed," then a 
-  "pop" restores the most recently saved values. 
-*/
-LSystem tree = {
-    '0',             // axiom
-    {
-        {'0', "1[0]0"}, // rules
-        {'1', "11"},
-    },
-    {'0', '1'},      // variables
-    {'[', ']'}       // constants
-};
+LSystem mainSystemType = TYPE_DEF[LSystemType::BOURKE_ALGAE_2];
 
 struct Axes {
   void draw(Graphics &g) {
@@ -81,55 +53,36 @@ struct Axes {
   }
 };
 
-void drawLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
-    mesh.vertex(start);
-    mesh.color(startColor);
-    mesh.vertex(end);
-    mesh.color(nextColor);
-}
-
-void drawBranch(Mesh &mesh, const std::vector<Vec3f> &points, const std::vector<RGB> &colors, const Vec3f &startPoint, const RGB &startColor) {
-    Vec3f currentPoint = startPoint;
-    Color currentColor = startColor;
-
-    for (int i = 0; i < points.size(); i++) {
-
-        Vec3f nextPoint = currentPoint + points[i];
-        Color nextColor = colors[i];
-        drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
-        currentPoint = nextPoint;
-        currentColor = nextColor;
-    }
-}
-
 struct AlloApp : App {
-  Parameter timeStep{"Time Step", "", 0.33f, "", 0.01, 3.0};
-  Parameter epsilon{"Epsilon", "", 0.000000001, "", 0.0001, 0.1};
-  Parameter randomness{"Randomness", "", 0.000000001, "", 0.0, 1.0};
+//   Parameter timeStep{"Time Step", "", 0.33f, "", 0.01, 3.0};
+//   Parameter epsilon{"Epsilon", "", 0.000000001, "", 0.0001, 0.1};
+//   Parameter randomness{"Randomness", "", 0.000000001, "", 0.0, 1.0};
   // Parameter pointSize{"/pointSize", "", 1.0, 0.0, 2.0};
 
   Axes axes;
 
-  std::string result;
+  std::string mainSystemString;
 
   void onInit() override {
     // set up GUI
     auto GUIdomain = GUIDomain::enableGUI(defaultWindowDomain());
     auto &gui = GUIdomain->newGUI();
-    gui.add(timeStep);
-    gui.add(epsilon);
-    gui.add(randomness);
+    // gui.add(timeStep);
+    // gui.add(epsilon);
+    // gui.add(randomness);
   }
 
-  void onCreate() override { 
-    // state.push_back(State{Vec3f(0, 0, 0), RGB(1, 1, 1)});
-    result = generateString(tree, N);
-    cout << "l-sys tree:\n" << result << endl;
-    // evaluate(tree, N);
+  void onCreate() override {
+    // The main l-system works like a root network
+    mainSystemString = generateString(mainSystemType, N);
+    cout << "main l-sys type:\n" << mainSystemString << endl;
+
     nav().pos(0, 0, 10); 
   }
 
-  void evaluate(const std::string &str, Mesh &mesh) {
+  void drawLSystem(const std::string &str, const al::Vec3f &startPoint, float decay, al::Mesh &mesh) {
+
+    // float decayRate = 0.9;  // *= 0.9 each iteration so that the draw actions become smaller and smaller
 
     struct State : al::Pose {
         al::Color color;
@@ -140,54 +93,67 @@ struct AlloApp : App {
     };
 
     std::vector<State> state;  // push_back / pop_back
+    // std::vector<al::Pose> state;  // push_back / pop_back
     
-    state.push_back(State{al::Vec3f(0, 0, 0), al::Color(1, 1, 1)});
-    al::Pose& p(state.back());
+    state.push_back(State{startPoint, al::Color(1, 1, 1)});
+    // state.push_back(al::Pose(startPoint));
+    // cout << "origin: " << state.back().pos() << endl;
+    // al::Pose& p(state.back());
 
-    // the origin
+    // start the l-system at its origin
     mesh.vertex(state.back().pos());
-    mesh.color(state.back().color);
-
-    for (char c : str) {
-      // currentPoint = state.back().pos;
-      // currentColor = state.back().color;
-      if (c == '0') {  // draw a line segment ending in a leaf
-        // cout << "0" << endl;
-        mesh.vertex(state.back().pos()); // instead of `currentPoint`
-        state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
-        mesh.vertex(state.back().pos()); // instead of `nextPoint`
-      } else if (c == '1') {  // draw a line segment
-        // cout << "1" << endl;
-        mesh.vertex(state.back().pos()); // instead of `currentPoint`
-        state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
-        mesh.vertex(state.back().pos()); // instead of `nextPoint`
-      } else if (c == '[') {
-        // CHANGE CURRENT BRANCH
-        // Push current state onto stack
-        // Rotate pose
-        p.pos() += p.uf();
-      } else if (c == ']') {
-        // RESTORE PREVIOUS BRANCH
-        // Pop previous state from stack
-      }
-    }
+    // mesh.color(state.back().color);
+    mesh.color(al::Color(1, 1, 1));
 
     // stack.back(); // top
-    // stack.pop(); // pop
+    // stack.pop_back(); // pop
     // stack.push_back(stack.back()); // push a copy of top
-
 
     // mesh.vertices(); // ...is the list of redundant vertices
     // mesh.compress(); // vertices + indices represetnation
     // mesh.vertices(); // ...is the list of unique vertices
     // mesh.indices();  // ...is the list of connectedness of vertices
 
+    for (char c : str) {
+        if (c == '0') {  // draw a line segment ending in a leaf
+            mesh.vertex(state.back().pos());
+            state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
+            mesh.vertex(state.back().pos());
+        } else if (c == '1') {  // draw a line segment
+            // cout << "branch: " << p.pos() << endl;
+            mesh.vertex(state.back().pos());
+            state.back().pos() += state.back().uf(); // uf means "unit forward", the vector that points front
+            mesh.vertex(state.back().pos());
+        } else if (c == '[') {  // CHANGE CURRENT BRANCH
+            // Push current state onto stack
+            state.push_back(state.back());
+        } else if (c == ']') {  // RESTORE PREVIOUS BRANCH
+            // Pop previous state from stack
+            state.pop_back();
+        }
+    }
+  }
+
+  void generateBranches(std::vector<al::Vec3f> &vertices, const LSystem &lsys, float probability, int n) {
+    // mesh.compress(); // vertices + indices represetnation
+    // mesh.vertices(); // ...is the list of unique vertices
+    // mesh.indices();  // ...is the list of connectedness of vertices
+    // mesh.compress();
+    for (auto vert: vertices) {
+        if (probability > rnd::uniform()) {  // randomly generate branches
+            Mesh m(Mesh::LINES);
+            drawLSystem(generateString(lsys, n), vert, 0.9, m);
+        }
+        // cout << vert << endl;
+        // mesh.vertex(vert);
+        // mesh.color(1, 1, 1);
+    }
   }
 
   bool onKeyDown(const Keyboard &k) override {
     if (k.key() == '1') {
-      // result = generateString(lsys, n);
-      // evaluate(tree, N);
+      // mainSystemString = generateString(lsys, n);
+      // drawLSystem(mainSystemType, N);
       // index = 0;
     }
     return true;
@@ -215,34 +181,28 @@ struct AlloApp : App {
     g.clear(0);
     g.meshColor();
 
-    g.rotate(angle, 0, 1, 0);
+    // g.rotate(angle, 0, 1, 0);
     axes.draw(g);
 
-    Mesh mesh(Mesh::LINES);
-    // evaluate(result, mesh);
+    Mesh mainSystemMesh(Mesh::LINES);
 
-    Vec3f currentPoint(Vec3f(0, 0, 0));
-    RGB currentColor(RGB(1, 1, 1));
+    drawLSystem(mainSystemString, Vec3f(0, 0, 0), mainSystemMesh);
+    g.draw(mainSystemMesh);
 
-    mesh.vertex(currentPoint);
-    mesh.color(currentColor);
+    mainSystemMesh.compress();
 
-    // drawLine(mesh, currentPoint, Vec3f(0, 1, 0), currentColor, RGB(1, 0, 0));
-    // drawLine(mesh, Vec3f(0, 1, 0), Vec3f(0, 1, 1), RGB(1, 0, 0), RGB(0, 1, 0));
-    // drawLine(mesh, Vec3f(0, 1, 1), Vec3f(0, 2, 1), RGB(0, 1, 0), RGB(0, 0, 1));
-    // drawLine(mesh, Vec3f(0, 2, 1), Vec3f(0, 2, 2), RGB(0, 0, 1), RGB(1, 1, 1));
+    int nLayers = 1;
+    auto roots = mainSystemMesh.vertices();
+    std::vector<LSystemType> branchTypes = {LSystemType::TREE};  // TODO: add more types
 
-    evaluate(result, mesh);
-    // cout << mesh.vertices().size() << endl;
-
-    // cout << index << endl;
-    // for (int i = 1; i < index; i++) {
-    //     // flat scalar = i / index;
-    // }
-    // drawBranch(mesh, points, colors, currentPoint, currentColor);
-    // drawLine(mesh, state.back().pos, Vec3f(1, 0, 0), state.back().color, RGB(0, rnd::uniform(), 0));
-
-    g.draw(mesh);
+    // Generate `nLayers` of branches
+    for (int i = 0; i < nLayers; ++i) {
+        // randomly select from a list of LSystem types
+        auto lsystemType = branchTypes[rnd::uniformi(branchTypes.size())];
+        float probability = 0.667;  // hardcoding for now
+        int iterations = N * 3;     // hardcoding for now
+        generateBranches(roots, TYPE_DEF[lsystemType], probability, iterations);
+    }
   }
 };
 

@@ -9,8 +9,8 @@
 using namespace al;
 using namespace std;
 
-double r() { return rnd::uniformS(); }
-RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
+// double r() { return rnd::uniformS(); }
+// RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
 
 // The data structure for an L-system
 struct LSystem {
