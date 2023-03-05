@@ -9,6 +9,27 @@ using namespace al;
 using namespace std;
 
 #include <utility>
+ 
+// NOTE:  this only generates the string, it does not draw/render anything.
+// Render actions (e.g. draw a line, make a sound, etc.) are handled by a separate
+// string parser that interprets the L-System string as a sequence of actions.
+std::string generateString(LSystem lsys, int n) {
+    std::string result = "";
+    std::string current = lsys.axiom;
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < current.length(); j++) {
+            char c = current[j];
+            if (lsys.rules.find(c) != lsys.rules.end()) {
+                result += lsys.rules[c];
+            } else {
+                result += c;
+            }
+        }
+        current = result;
+        result = "";
+    }
+    return current;
+}
 
   // VISUAL RENDERING
   void renderLSystem(const LSystem &lsys, const std::string &str, const al::Vec3f &startPoint, al::Mesh &mesh) {
@@ -68,10 +89,6 @@ using namespace std;
 
 
   }
-
-
-
-
 
 //   void generateAndRenderBranches(std::vector<al::Vec3f> &vertices, const LSystem &lsys, float probability, std::pair<int, int> range) {
 //     // mesh.compress(); // vertices + indices represetnation

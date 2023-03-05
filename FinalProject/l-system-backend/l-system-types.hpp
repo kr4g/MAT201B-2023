@@ -17,7 +17,7 @@ const std::map<LSystemType, std::string> TYPE_NAMES {
 };
 
 // Definitions for L-System types
-const std::map<LSystemType, LSystem> TYPE_DEF {
+const std::map<LSystemType, LSystem> TYPE_DEFS {
     {LSystemType::BOURKE_BUSH_2, LSystem(
         {'F'},  // VARIABLES
         {'[', ']', '+', '-'},  // CONSTANTS
