@@ -22,6 +22,13 @@ using namespace std;
 
 using namespace gam;
 
+const int N{27};  // number of iterations for main system
+
+// frequency ratios for whole tone scale
+float tonic = 440 / 2;
+float ratios[12] = {1.0, 1.059463, 1.122462, 1.189207, 1.259921, 1.334840,
+                    1.414214, 1.498307, 1.587401, 1.681793, 1.781797, 1.887749};
+
 double r() { return rnd::uniformS(); }
 RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
 
@@ -46,11 +53,13 @@ struct SimpleVoice : PositionedVoice {
   float amplitude{0};
   Mesh audioMesh;
 
+  int counter{0};
+
   SimpleVoice() {
     registerParameters(frequency, modulation, index);
 
     envelope.levels(0, 1, 0);
-    envelope.lengths(0.01, 0.95);
+    envelope.lengths(0.47, 0.9);
 
     audioMesh.primitive(Mesh::LINE_STRIP);
     for (int i = 0; i < stft.numBins(); i++) {
@@ -66,8 +75,9 @@ struct SimpleVoice : PositionedVoice {
 
   virtual void onProcess(AudioIOData &io) override {
     while (io()) {
-      modulator.freq(mtof(modulation.get()));
-      carrier.freq(mtof(frequency.get()) + mtof(index.get()) * modulator());
+      // modulator.freq(mtof(modulation.get()));
+      modulator.freq(modulation.get());
+      carrier.freq(frequency.get() + mtof(index.get()) * modulator());
       float fm = carrier();
       if (stft(fm)) {
         for (int i = 0; i < stft.numBins(); i++) {
@@ -86,9 +96,16 @@ struct SimpleVoice : PositionedVoice {
 
   virtual void onTriggerOn() override {
     envelope.reset();
-    frequency.set(rnd::uniform(127.0f));
-    modulation.set(rnd::uniform(127.0f));
+
+    double f = tonic * ratios[(int)rnd::uniform(12)];
+    double m = f * rnd::uniformS(tonic);
+
+    frequency.set(f);
+    modulation.set(m);
     index.set(rnd::uniform(127.0f));
+
+    tonic *= pow(2, 66.67 / 1200.0);
+    counter = (counter + 1) % N;
   }
 };
 
@@ -121,7 +138,7 @@ struct Axes {
 };
 
 LSystemType MAIN_LSYS_TYPE{LSystemType::BOURKE_ALGAE_2};
-const int N{27};  // number of iterations for main system
+
 
 // --------------------------------------------------------------
 // 0. GET THE L-SYSTEM TYPE FOR THE MAIN SYSTEM
@@ -155,9 +172,10 @@ struct AlloApp : public DistributedApp {
     std::vector<Vec3f> path;
     // std::vector<RGB> cVec;
     double timeStep;
+    double elapsedTime;
 
     // constructor
-    StepState(const std::vector<Vec3f> &pVec, double t) : path(pVec), timeStep(t) {}
+    StepState(const std::vector<Vec3f> &pVec, double t) : path(pVec), timeStep(t), elapsedTime(0.0) {}
 
   };
   std::vector<StepState> stepStates;
@@ -236,8 +254,9 @@ struct AlloApp : public DistributedApp {
     bool onKeyDown(Keyboard const &k) {
         if (isPrimary() && k.key() == ' ') {  // Start a new sequence through tree
           // new step state
-          stepStates.push_back(StepState(pos, (pos[0] - pos[1]).mag()));
+          stepStates.push_back(StepState(pos, 3.667*(pos[0] - pos[1]).mag()));
           stepOn = !stepOn;
+          tonic = 220.0;
             // auto *freeVoice = scene.getVoice<SimpleVoice>();
             // Pose pose;
             // // pose.vec().x = al::rnd::uniformS(2);
@@ -257,21 +276,24 @@ struct AlloApp : public DistributedApp {
   // float interval = 1.f;
   int index = 0;
   void onAnimate(double dt) override {
-    time += dt;
     scene.update(dt);
     if (stepOn) {
-      if (time > stepStates.back().timeStep) {
+      // for (auto &state : stepStates) {
+      //   // update current position
+      //   state.path[index] = state.path[index] + (state.path[index + 1] - state.path[index]) * dt / state.timeStep;
+      // }
+      stepStates.back().elapsedTime += dt;
+      if (stepStates.back().elapsedTime > stepStates.back().timeStep) {
+        // reset internal clock
+        stepStates.back().elapsedTime = 0.f;
+
+        // update current timestep
         stepStates.back().timeStep = rnd::uniform(0.25, 0.33) * (stepStates.back().path[index] - stepStates.back().path[index + 1]).mag();
-        time = 0.f;
+        
         // make sound at vertex
         auto *freeVoice = scene.getVoice<SimpleVoice>();
         Pose pose;
-        // pose.vec().x = al::rnd::uniformS(2);
-        // pose.vec().y = al::rnd::uniformS(2);
-        // pose.vec().z = -10.0 + al::rnd::uniform(6);
-        // random vertex from mainSystemMesh
         pose.vec(mainSystemMesh.vertices().at(index));
-        // pose.pos(0, 0, 0);
         freeVoice->setPose(pose);
         scene.triggerOn(freeVoice);
 
@@ -280,17 +302,14 @@ struct AlloApp : public DistributedApp {
           stepOn = false;
           // mainSystemMesh.vertices().erase(mainSystemMesh.vertices().begin() + index);
           index = 0;
+          stepStates.pop_back();
         }
       }
     }
-
-
-
     nav().faceToward(Vec3d(0, 0, 0));
-    }
+  }
 
   void onSound(AudioIOData &io) { scene.render(io); }
-
 
   void onDraw(Graphics &g) override {
     g.clear(0);
