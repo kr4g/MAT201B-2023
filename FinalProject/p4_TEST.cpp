@@ -59,7 +59,7 @@ struct SimpleVoice : PositionedVoice {
     registerParameters(frequency, modulation, index);
 
     envelope.levels(0, 1, 0);
-    envelope.lengths(0.47, 0.9);
+    envelope.lengths(0.01, 0.667);
 
     audioMesh.primitive(Mesh::LINE_STRIP);
     for (int i = 0; i < stft.numBins(); i++) {
@@ -98,9 +98,9 @@ struct SimpleVoice : PositionedVoice {
     envelope.reset();
 
     double f = tonic * ratios[(int)rnd::uniform(12)];
-    double m = f * rnd::uniformS(tonic);
+    double m = f / rnd::uniformS(tonic);
 
-    frequency.set(f);
+    frequency.set(tonic);
     modulation.set(m);
     index.set(rnd::uniform(127.0f));
 
@@ -288,7 +288,7 @@ struct AlloApp : public DistributedApp {
         stepStates.back().elapsedTime = 0.f;
 
         // update current timestep
-        stepStates.back().timeStep = rnd::uniform(0.25, 0.33) * (stepStates.back().path[index] - stepStates.back().path[index + 1]).mag();
+        stepStates.back().timeStep = rnd::uniform(0.1667, 0.21) * (stepStates.back().path[index] - stepStates.back().path[index + 1]).mag();
         
         // make sound at vertex
         auto *freeVoice = scene.getVoice<SimpleVoice>();
