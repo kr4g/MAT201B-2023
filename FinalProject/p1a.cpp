@@ -5,7 +5,8 @@
   PRESS '1' TO GENERATE A NEW VARIATION
 */
 
-#include "l-system.hpp"
+// #include "l-system.hpp"
+#include "l-system-backend/parser.hpp"  // pulls in all the necessary headers
 
 #include "al/app/al_App.hpp"
 #include "al/app/al_GUIDomain.hpp"
@@ -18,21 +19,40 @@ using namespace al;
 #include <iostream>
 using namespace std;
 
+double r() { return rnd::uniformS(); }
+RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
+
 struct State {
         Vec3f pos;  // position
         // Quatf rot;  // orientation
         RGB color;  // color
 };
 
-LSystem algae = {
-    'A',             // axiom
-    {
+// LSystem algae = {
+//     {'A', 'B'},      // variables
+//     {},               // constants
+//     "A",             // axiom
+//     0.0,             // angle
+//     1.0,             // length
+//     1.0,             // scale factor
+//     {
+//         {'A', "AB"}, // rules
+//         {'B', "A"},
+//     },
+// };
+// with constructor
+LSystem algae = LSystem(
+    std::vector<char>{'A', 'B'},      // variables
+    std::vector<char>{},               // constants
+    std::string{"A"},             // axiom
+    float{0.0},             // angle
+    float{1.0},             // length
+    float{1.0},             // scale factor
+    std::map<char, std::string> {
         {'A', "AB"}, // rules
         {'B', "A"},
-    },
-    {'A', 'B'},      // variables
-    {}               // constants
-};
+    }
+);
 
 struct Axes {
   void draw(Graphics &g) {
