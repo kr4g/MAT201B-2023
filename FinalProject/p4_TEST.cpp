@@ -277,10 +277,9 @@ struct AlloApp : public DistributedApp {
 
         ++index;
         if (index >= mainSystemMesh.vertices().size()) {
-          index = 0;
           stepOn = false;
-          // mainSystemMesh.vertices().pop_back();
-          // mainSystemMesh.compress();
+          // mainSystemMesh.vertices().erase(mainSystemMesh.vertices().begin() + index);
+          index = 0;
         }
       }
     }
