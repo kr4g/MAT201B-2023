@@ -3,7 +3,8 @@
 // -------------------------------------------------------------------------------------------
 // --------- "Standard" L-System Rule Sets ---------------------------------------------------
 // 
-// TODO:  can the instruction strings be converted to switch cases or lambda functions?
+// NOTE:  can the instruction strings be converted to switch cases or lambda functions which
+// could then be used by `parser.hpp`?
 
 // The "standard" L-system draw rules (if no rules are specified)
 // Adapted from:  http://paulbourke.net/fractals/lsys/
