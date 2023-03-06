@@ -22,6 +22,9 @@ using namespace std;
 
 using namespace gam;
 
+double r() { return rnd::uniformS(); }
+RGB c() { return RGB(rnd::uniform(), rnd::uniform(), rnd::uniform()); }
+
 template <typename T>
 T mtof(T m) {
   return 440 * pow(2, (m - 69) / 12);
@@ -118,7 +121,7 @@ struct Axes {
 };
 
 LSystemType MAIN_LSYS_TYPE{LSystemType::BOURKE_ALGAE_2};
-const int N{9};  // number of iterations for main system
+const int N{27};  // number of iterations for main system
 
 // --------------------------------------------------------------
 // 0. GET THE L-SYSTEM TYPE FOR THE MAIN SYSTEM
@@ -128,6 +131,9 @@ const int N{9};  // number of iterations for main system
 // where ertain vertices in the mesh can generate branches made
 // of different L-Systems.
 LSystem mainSystem{TYPE_DEFS.at(MAIN_LSYS_TYPE)};
+Mesh mainSystemMesh(Mesh::LINES);
+
+Mesh branchMesh(Mesh::LINES);
 
 
 struct AlloApp : public DistributedApp {
@@ -139,6 +145,24 @@ struct AlloApp : public DistributedApp {
 
   std::string mainSystemString;
 
+  std::vector<Vec3f> pos;
+  std::vector<RGB> colors;
+
+
+  struct StepState {
+    // Vec3f startPoint;
+    // RGB startColor;
+    std::vector<Vec3f> path;
+    // std::vector<RGB> cVec;
+    double timeStep;
+
+    // constructor
+    StepState(const std::vector<Vec3f> &pVec, double t) : path(pVec), timeStep(t) {}
+
+  };
+  std::vector<StepState> stepStates;
+
+
   void onInit() override {
     // set up GUI
     auto GUIdomain = GUIDomain::enableGUI(defaultWindowDomain());
@@ -146,6 +170,25 @@ struct AlloApp : public DistributedApp {
     // gui.add(timeStep);
     // gui.add(epsilon);
     // gui.add(randomness);
+  }
+
+  void drawLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
+    mesh.vertex(start);
+    mesh.color(startColor);
+    mesh.vertex(end);
+    mesh.color(nextColor);
+  }
+  void drawBranch(Mesh &mesh, const std::vector<Vec3f> &pVec, const std::vector<RGB> &cVec, const Vec3f &startPoint, const RGB &startColor) {
+    Vec3f currentPoint = startPoint;
+    Color currentColor = startColor;
+
+    for (int i = 0; i < pVec.size(); i++) {
+        Vec3f nextPoint = currentPoint + pVec[i];
+        Color nextColor = cVec[i];
+        drawLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
+        currentPoint = nextPoint;
+        currentColor = nextColor;
+    }
   }
 
   void onCreate() override {
@@ -157,44 +200,93 @@ struct AlloApp : public DistributedApp {
     cout << "iterations: " << N << endl;
     cout << "string:\n" << mainSystemString << endl;
 
+    // --------------------------------------------------------------
+    // 2a. RENDER THE MAIN L-SYSTEM STRING (visually)
+    // --------------------------------------------------------------
+    
+    // Root
+    // mainSystemMesh.vertex(0, 0, 0);
+    // mainSystemMesh.color(1, 1, 1);  // white
+    // Vine System
+    for (int i = 0; i < N; ++i) {
+      pos.push_back(Vec3f(r(), r(), r()));
+      colors.push_back(RGB((N - i)/N, (N - i)/N, 1));
+    }
+    drawBranch(mainSystemMesh, pos, colors, Vec3f(0, 0, 0), RGB(1, 1, 1));
+    
+    // // Branch Nodes
+    // float p{0.667};  // probability of branching
+    
+    // mainSystemMesh.compress();
+    // for (auto vert: mainSystemMesh.vertices()) {
+    //   if (p > rnd::uniform()) {
+    //     drawBranch(branchMesh, pos, colors, vert.pos(), vert.color());
+    //   }
+    // }
+
     // Set up the synth
     scene.registerSynthClass<SimpleVoice>();
     registerDynamicScene(scene);
     scene.verbose(true);  // turns on messages about voices to the console
 
-
     nav().pos(0, 0, 10); 
   }
 
+  bool stepOn = false;
     bool onKeyDown(Keyboard const &k) {
-        if (isPrimary() && k.key() == ' ') {  // Start a new voice on space bar
-            auto *freeVoice = scene.getVoice<SimpleVoice>();
-            Pose pose;
-            pose.vec().x = al::rnd::uniformS(2);
-            pose.vec().y = al::rnd::uniformS(2);
-            pose.vec().z = -10.0 + al::rnd::uniform(6);
-            freeVoice->setPose(pose);
-            scene.triggerOn(freeVoice);
+        if (isPrimary() && k.key() == ' ') {  // Start a new sequence through tree
+          // new step state
+          stepStates.push_back(StepState(pos, (pos[0] - pos[1]).mag()));
+          stepOn = !stepOn;
+            // auto *freeVoice = scene.getVoice<SimpleVoice>();
+            // Pose pose;
+            // // pose.vec().x = al::rnd::uniformS(2);
+            // // pose.vec().y = al::rnd::uniformS(2);
+            // // pose.vec().z = -10.0 + al::rnd::uniform(6);
+            // // random vertex from mainSystemMesh
+            // pose.pos(mainSystemMesh.vertices()[al::rnd::uniform(mainSystemMesh.vertices().size())]);
+            // // pose.pos(0, 0, 0);
+            // freeVoice->setPose(pose);
+            // scene.triggerOn(freeVoice);
         }
         return true;
   }
   
   float angle = 0;
   float time = 0.f;
-  float interval = 1.f;
+  // float interval = 1.f;
   int index = 0;
   void onAnimate(double dt) override {
+    time += dt;
     scene.update(dt);
-    // auto& v((mesh.vertices()));
-    //   dt = dt * timeStep.get();
-    //   time += dt;
-    //   // inc = (eps > 0.1) ? inc * 0.9 : (eps < 0.00001) ? inc * 1.1 : increment.get();
-    //   // eps += inc;
-    //   if (time > interval) {
-    //     time = 0.f;
-    //     // index = (index < N) ? index + 1 : N;
-    //   }
-    //     angle += 0.1;
+    if (stepOn) {
+      if (time > stepStates.back().timeStep) {
+        stepStates.back().timeStep = rnd::uniform(0.25, 0.33) * (stepStates.back().path[index] - stepStates.back().path[index + 1]).mag();
+        time = 0.f;
+        // make sound at vertex
+        auto *freeVoice = scene.getVoice<SimpleVoice>();
+        Pose pose;
+        // pose.vec().x = al::rnd::uniformS(2);
+        // pose.vec().y = al::rnd::uniformS(2);
+        // pose.vec().z = -10.0 + al::rnd::uniform(6);
+        // random vertex from mainSystemMesh
+        pose.vec(mainSystemMesh.vertices().at(index));
+        // pose.pos(0, 0, 0);
+        freeVoice->setPose(pose);
+        scene.triggerOn(freeVoice);
+
+        ++index;
+        if (index >= mainSystemMesh.vertices().size()) {
+          index = 0;
+          stepOn = false;
+          // mainSystemMesh.vertices().pop_back();
+          // mainSystemMesh.compress();
+        }
+      }
+    }
+
+
+
     nav().faceToward(Vec3d(0, 0, 0));
     }
 
@@ -206,22 +298,11 @@ struct AlloApp : public DistributedApp {
     g.meshColor();
 
     // g.rotate(angle, 0, 1, 0);
-    axes.draw(g);
+    // axes.draw(g);
 
-    // --------------------------------------------------------------
-    // 2a. RENDER THE MAIN L-SYSTEM STRING (visually)
-    // --------------------------------------------------------------
-    // Mesh mainSystemMesh(Mesh::LINES);
-
-    // // a. visually
-    // renderLSystem(mainSystem,    // the LSystem struct for the main system
-    //               mainSystemString,  // the string generated from the main system
-    //               STD_RULES_DRAW,    // the draw rules for parsing the string
-    //               Vec3f(0, 0, 0),    // the starting position of the main system
-    //               mainSystemMesh);   // the mesh to render the main system to
-
-    // g.draw(mainSystemMesh);
-
+    g.draw(mainSystemMesh);
+    g.draw(branchMesh);
+    mainSystemMesh.compress();
     // --------------------------------------------------------------
     // 3. GENERATE AND RENDER BRANCHES
     // --------------------------------------------------------------
