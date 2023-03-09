@@ -252,21 +252,11 @@ struct AlloApp : public DistributedApp {
 
   bool stepOn = false;
     bool onKeyDown(Keyboard const &k) {
-        if (isPrimary() && k.key() == ' ') {  // Start a new sequence through tree
+        if (k.key() == ' ') {  // Start a new sequence through tree
           // new step state
           stepStates.push_back(StepState(pos, 3.667*(pos[0] - pos[1]).mag()));
           stepOn = !stepOn;
           tonic = 220.0;
-            // auto *freeVoice = scene.getVoice<SimpleVoice>();
-            // Pose pose;
-            // // pose.vec().x = al::rnd::uniformS(2);
-            // // pose.vec().y = al::rnd::uniformS(2);
-            // // pose.vec().z = -10.0 + al::rnd::uniform(6);
-            // // random vertex from mainSystemMesh
-            // pose.pos(mainSystemMesh.vertices()[al::rnd::uniform(mainSystemMesh.vertices().size())]);
-            // // pose.pos(0, 0, 0);
-            // freeVoice->setPose(pose);
-            // scene.triggerOn(freeVoice);
         }
         return true;
   }
@@ -294,6 +284,7 @@ struct AlloApp : public DistributedApp {
         auto *freeVoice = scene.getVoice<SimpleVoice>();
         Pose pose;
         pose.vec(mainSystemMesh.vertices().at(index));
+
         freeVoice->setPose(pose);
         scene.triggerOn(freeVoice);
 
@@ -321,6 +312,9 @@ struct AlloApp : public DistributedApp {
     g.draw(mainSystemMesh);
     g.draw(branchMesh);
     mainSystemMesh.compress();
+    // for (auto& ind : mainSystemMesh.vertices()) {
+    //   std::cout << ind << std::endl;
+    // }
     // --------------------------------------------------------------
     // 3. GENERATE AND RENDER BRANCHES
     // --------------------------------------------------------------
