@@ -225,27 +225,34 @@ struct AlloApp : public DistributedApp {
     for (char c : mainSystemString) {
       Vec3f v(currentLength, r(), r());
       if (c == 'F') {  // Move forward by `LSystem.length` drawing a line
-        // buildLine(mainSystemMesh,
-        //           state.back().vec(), al::RGB(0, 1, 0),  // start
-        //           v, al::RGB(1, 0, 0)); // end
+        // point a
         mainSystemMesh.vertex(state.back().pos());
-        mainSystemMesh.color(0, 1, 0);
-        // v = Vec3f(0.05*currentAngle, r()*mainSystem.length, currentLength);
-        state.back().pos() += v;
+        mainSystemMesh.color(state.back().color);
+        
+        state.back().pos() += v;                  // move forward
+        state.back().color = al::Color(0, 1, 0);  // change color
+
+        // point b
         mainSystemMesh.vertex(state.back().pos());
-        mainSystemMesh.color(1, 0, 0);
+        mainSystemMesh.color(state.back().color);
+
+        // update draw scale (as new branches grow, they get smaller)
         state.back().scale *= mainSystem.scaleFactor;
+
       } else if (c == '+') {  // Turn left by `LSystem.angle`
         currentAngle += mainSystem.angle*0.3;
-        v[0] = r();
+
+        v[0] = r() * currentAngle;
         v[1] = currentLength * state.back().scale;
-        // v[2] = v[2] + currentAngle;
+        
+        state.back().color = al::Color(0, 0, 1);
       } else if (c == '-') {  // Turn right by `LSystem.currentAngle`
         currentAngle -= mainSystem.angle*0.3;
-        v[1] = r();
+
+        v[1] = r() * currentAngle;
         v[2] = currentLength * state.back().scale;
-        // v[1] = r();
-        // v[2] = v[2] - currentAngle;
+
+        state.back().color = al::Color(1, 0, 0);
       } else if (c == '[') {  // CHANGE CURRENT BRANCH
           // Push current state onto stack
           state.push_back(state.back());
