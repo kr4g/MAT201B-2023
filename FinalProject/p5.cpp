@@ -207,6 +207,8 @@ struct AlloApp : public DistributedApp {
     struct State : al::Pose {
         al::Color color;
 
+        float scale = 1.0;
+
         State(const al::Vec3f& position, const al::Color& color)
             : al::Pose(position), color(color)
         {}
@@ -216,26 +218,34 @@ struct AlloApp : public DistributedApp {
     // std::vector<al::Pose> state;  // push_back / pop_back
 
     state.push_back(State{al::Vec3f(0, 0, 0), al::Color(1, 1, 1)});
-    float currentAngle = mainSystem.angle;
-    float currentLength = mainSystem.length;
+    float currentAngle = mainSystem.angle *0.3;
+    float currentLength = mainSystem.length * 0.3;
 
     // cout << mainSystem.scaleFactor << endl;
-
     for (char c : mainSystemString) {
+      Vec3f v(currentLength, r(), r());
       if (c == 'F') {  // Move forward by `LSystem.length` drawing a line
         // buildLine(mainSystemMesh,
         //           state.back().vec(), al::RGB(0, 1, 0),  // start
-        //           next, al::RGB(1, 0, 0)); // end
+        //           v, al::RGB(1, 0, 0)); // end
         mainSystemMesh.vertex(state.back().pos());
         mainSystemMesh.color(0, 1, 0);
-        state.back().pos() += Vec3f(0.05*currentAngle, r()*mainSystem.length, currentLength);
+        // v = Vec3f(0.05*currentAngle, r()*mainSystem.length, currentLength);
+        state.back().pos() += v;
         mainSystemMesh.vertex(state.back().pos());
         mainSystemMesh.color(1, 0, 0);
-        currentLength *= mainSystem.scaleFactor;
+        state.back().scale *= mainSystem.scaleFactor;
       } else if (c == '+') {  // Turn left by `LSystem.angle`
-        currentAngle += mainSystem.angle;
+        currentAngle += mainSystem.angle*0.3;
+        v[0] = r();
+        v[1] = currentLength * state.back().scale;
+        // v[2] = v[2] + currentAngle;
       } else if (c == '-') {  // Turn right by `LSystem.currentAngle`
-        currentAngle -= mainSystem.angle;
+        currentAngle -= mainSystem.angle*0.3;
+        v[1] = r();
+        v[2] = currentLength * state.back().scale;
+        // v[1] = r();
+        // v[2] = v[2] - currentAngle;
       } else if (c == '[') {  // CHANGE CURRENT BRANCH
           // Push current state onto stack
           state.push_back(state.back());
@@ -304,7 +314,7 @@ struct AlloApp : public DistributedApp {
         }
       }
     }
-    nav().faceToward(Vec3d(0, 0, 0));
+    // nav().faceToward(Vec3d(0, 0, 0));
   }
 
   void onSound(AudioIOData &io) { scene.render(io); }
