@@ -31,64 +31,84 @@ std::string generateString(LSystem lsys, int n) {
     return current;
 }
 
-  // VISUAL RENDERING
-  void renderLSystem(const LSystem &lsys, const std::string &str, const al::Vec3f &startPoint, al::Mesh &mesh) {
+void buildLine(Mesh &mesh, const Vec3f &start, const Vec3f &end, const RGB &startColor, const RGB &nextColor) {
+    mesh.vertex(start);
+    mesh.color(startColor);
+    mesh.vertex(end);
+    mesh.color(nextColor);
+}
 
-    // float decayRate = lsys.scaleFactor;
+void buildBranch(Mesh &mesh, const std::vector<Vec3f> &pVec, const std::vector<RGB> &cVec, const Vec3f &startPoint, const RGB &startColor) {
+    Vec3f currentPoint = startPoint;
+    Color currentColor = startColor;
 
-    struct State : al::Pose {
-        al::Color color;
-
-        State(const al::Vec3f& position, const al::Color& color)
-            : al::Pose(position), color(color)
-        {}
-    };
-
-    std::vector<State> state;  // push_back / pop_back
-    // std::vector<al::Pose> state;  // push_back / pop_back
-    
-    state.push_back(State{startPoint, al::Color(1, 1, 1)});
-    // state.push_back(al::Pose(startPoint));
-    // cout << "origin: " << state.back().pos() << endl;
-    // al::Pose& p(state.back());
-
-    // start the l-system at its origin
-    mesh.vertex(state.back().pos());
-    // mesh.color(state.back().color);
-    mesh.color(al::Color(1, 1, 1));
-
-    // stack.back(); // top
-    // stack.pop_back(); // pop
-    // stack.push_back(stack.back()); // push a copy of top
-
-    // mesh.vertices(); // ...is the list of redundant vertices
-    // mesh.compress(); // vertices + indices represetnation
-    // mesh.vertices(); // ...is the list of unique vertices
-    // mesh.indices();  // ...is the list of connectedness of vertices
-
-    for (char c : str) {
-        if (c == 'F') {  // Move forward by `LSystem.length` drawing a line
-            // ...
-        } else if (c == '+') {
-            
-        } else if (c == '-') {
-
-        } else if (c == '[') {  // CHANGE CURRENT BRANCH
-            // Push current state onto stack
-            state.push_back(state.back());
-        } else if (c == ']') {  // RESTORE PREVIOUS BRANCH
-            // Pop previous state from stack
-            state.pop_back();
-        }
+    for (int i = 0; i < pVec.size(); i++) {
+        Vec3f nextPoint = currentPoint + pVec[i];
+        Color nextColor = cVec[i];
+        buildLine(mesh, currentPoint, nextPoint, currentColor, nextColor);
+        currentPoint = nextPoint;
+        currentColor = nextColor;
     }
-    // g.draw(mesh);
-  }
+}
 
-  // AUDIO RENDERING
-  void renderLSystem(const LSystem &lsys, const std::string &str, float f) {
+// VISUAL RENDERING
+void renderLSystem(const LSystem &lsys, const std::string &str, const al::Vec3f &startPoint, al::Mesh &mesh) {
+
+// float decayRate = lsys.scaleFactor;
+
+struct State : al::Pose {
+    al::Color color;
+
+    State(const al::Vec3f& position, const al::Color& color)
+        : al::Pose(position), color(color)
+    {}
+};
+
+std::vector<State> state;  // push_back / pop_back
+// std::vector<al::Pose> state;  // push_back / pop_back
+
+state.push_back(State{startPoint, al::Color(1, 1, 1)});
+// state.push_back(al::Pose(startPoint));
+// cout << "origin: " << state.back().pos() << endl;
+// al::Pose& p(state.back());
+
+// start the l-system at its origin
+mesh.vertex(state.back().pos());
+// mesh.color(state.back().color);
+mesh.color(al::Color(1, 1, 1));
+
+// stack.back(); // top
+// stack.pop_back(); // pop
+// stack.push_back(stack.back()); // push a copy of top
+
+// mesh.vertices(); // ...is the list of redundant vertices
+// mesh.compress(); // vertices + indices represetnation
+// mesh.vertices(); // ...is the list of unique vertices
+// mesh.indices();  // ...is the list of connectedness of vertices
+
+for (char c : str) {
+    if (c == 'F') {  // Move forward by `LSystem.length` drawing a line
+        // ...
+    } else if (c == '+') {
+        
+    } else if (c == '-') {
+
+    } else if (c == '[') {  // CHANGE CURRENT BRANCH
+        // Push current state onto stack
+        state.push_back(state.back());
+    } else if (c == ']') {  // RESTORE PREVIOUS BRANCH
+        // Pop previous state from stack
+        state.pop_back();
+    }
+}
+// g.draw(mesh);
+}
+
+// AUDIO RENDERING
+void renderLSystem(const LSystem &lsys, const std::string &str, float f) {
 
 
-  }
+}
 
 //   void generateAndRenderBranches(std::vector<al::Vec3f> &vertices, const LSystem &lsys, float probability, std::pair<int, int> range) {
 //     // mesh.compress(); // vertices + indices represetnation

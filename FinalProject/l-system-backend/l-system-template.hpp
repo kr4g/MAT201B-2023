@@ -35,4 +35,17 @@ struct LSystem {
         scaleFactor = sf;
         rules = r;
     }
+
+    // // overloaded extraction operator
+    // friend std::ostream& operator<<(std::ostream& os, const LSystem& lsys) {
+    //     os << "Variables: ";
+    //     for (int i = 0; i < lsys.variables.size(); i++) {
+    //         os << lsys.variables[i] << " ";
+    //     }
+    //     os << "\nConstnats: ";
+    //     for (int i = 0; i < lsys.constnats.size(); i++) {
+    //         os << lsys.constnats[i] << " ";
+    //     }
+    //     os << "\nAxiom: " << lsys.axiom << "\nAngle: " << lsys.angle << "\nLength: " << lsys.length << "\nScale Factor: " << lsys.scaleFactor << "\nRules: " << "\nScale Factor: " << lsys.scaleFactor << "\n";
+    // }
 };
